@@ -204,7 +204,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       style: TextStyle(
                                         fontSize: 19,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors(0xFF0F172A),
+                                        color: Color(0xFF0F172A),
                                         letterSpacing: 1.2,
                                       ),
                                     ),
@@ -234,10 +234,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         footer: shopState.shop.footerText));
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text('Shop details not loaded'),
-                                        backgroundColor: Colors.red));
+                                  const SnackBar(
+                                    content: Text('Shop details not loaded'),
+                                    backgroundColor: Colors.red,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
                               }
                             },
                             label: 'Print Receipt',
