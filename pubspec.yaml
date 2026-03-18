@@ -55,3 +55,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Ity ampahany ity no mampiditra ny sary sy ny logo-nao
+  assets:
+    - assets/Fond.jpg
+    - assets/grc_logo.png
