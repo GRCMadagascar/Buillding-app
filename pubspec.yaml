@@ -62,6 +62,7 @@ flutter:
     - assets/Fond.jpg
     - assets/grc_logo.png
 
+ # Iny andalana 65 iny akisaka kely miankavia indrindra
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
