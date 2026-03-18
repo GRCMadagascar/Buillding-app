@@ -35,10 +35,16 @@ class _ScannerPageState extends State<ScannerPage>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
+
+    // Use a Tween to drive the opacity between two values and apply a curve.
+    // This guarantees an Animation<double> with defined range for FadeTransition.
+    _animation = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
     );
+
     // Make a subtle pulsating fade
     _animationController.repeat(reverse: true);
   }

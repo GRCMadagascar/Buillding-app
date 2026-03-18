@@ -579,7 +579,9 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   item.product.name,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -587,9 +589,10 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   '${item.product.price.toStringAsFixed(0)} Ar',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.grey[600]),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -604,17 +607,19 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _circularIconButton(
-                    icon: Icons.remove,
-                    onPressed: () {
-                      if (item.quantity > 1) {
-                        context.read<BillingBloc>().add(UpdateQuantityEvent(
-                            item.product.id, item.quantity - 1));
-                      } else {
-                        context
-                            .read<BillingBloc>()
-                            .add(RemoveProductFromCartEvent(item.product.id));
-                      }
-                    }),
+                  icon: Icons.remove,
+                  onPressed: () {
+                    if (item.quantity > 1) {
+                      context.read<BillingBloc>().add(
+                        UpdateQuantityEvent(item.product.id, item.quantity - 1),
+                      );
+                    } else {
+                      context.read<BillingBloc>().add(
+                        RemoveProductFromCartEvent(item.product.id),
+                      );
+                    }
+                  },
+                ),
                 SizedBox(
                   width: 32,
                   child: Text(
@@ -624,14 +629,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 _circularIconButton(
-                    icon: Icons.add,
-                    onPressed: () {
-                      context.read<BillingBloc>().add(UpdateQuantityEvent(
-                          item.product.id, item.quantity + 1));
-                    }),
+                  icon: Icons.add,
+                  onPressed: () {
+                    context.read<BillingBloc>().add(
+                      UpdateQuantityEvent(item.product.id, item.quantity + 1),
+                    );
+                  },
+                ),
               ],
             ),
           ),
+        ],
         ],
       ),
     );
