@@ -8,7 +8,7 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
-import '../../features/product/presentation/pages/splash_screen.dart';
+import '../../features/billing/presentation/pages/splash_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',

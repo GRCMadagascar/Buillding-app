@@ -119,12 +119,14 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           .toList();
 
       await printerHelper.printReceipt(
-          shopName: event.shopName,
-          address1: event.address1,
-          address2: event.address2,
-          phone: event.phone,
-          total: state.totalAmount,
-          footer: event.footer);
+        shopName: event.shopName,
+        address1: event.address1,
+        address2: event.address2,
+        phone: event.phone,
+        items: items,
+        total: state.totalAmount,
+        footer: event.footer,
+      );
 
       emit(state.copyWith(isPrinting: false, printSuccess: true));
     } catch (e) {
