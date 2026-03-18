@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,16 +18,16 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 2), // animation duration
+      duration: const Duration(seconds: 1), // animation duration
       vsync: this,
     );
 
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
-    // After 3 seconds, navigate to the home route '/'
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacementNamed('/');
+    // After a short delay, navigate to the home route '/' using GoRouter
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) context.go('/');
     });
   }
 
@@ -39,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF6C63FF),
+      backgroundColor: const Color(0xFF3F0354), 
       body: Center(
         child: FadeTransition(
           opacity: _animation,
@@ -47,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
             scale: _animation,
             child: Image.asset(
               'assets/grc_logo.png',
-              height: 150,
+              height: 120,
             ),
           ),
         ),
