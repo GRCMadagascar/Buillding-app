@@ -47,6 +47,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: "^0.13.1"  # Nampiana elanelana 2 eto mba hitovy amin'ny ambony
   
   # Code Generation
   build_runner: ^2.4.8
@@ -60,3 +61,11 @@ flutter:
   assets:
     - assets/Fond.jpg
     - assets/grc_logo.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/grc_logo.png"
+  android_icon_name: "Billing POS by GRC"
+  ios_icon_name: "Billing POS by GRC"
+  adaptive_icon_background: "#ffffff"
