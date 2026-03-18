@@ -10,17 +10,37 @@ class ScannerPage extends StatefulWidget {
   State<ScannerPage> createState() => _ScannerPageState();
 }
 
-class _ScannerPageState extends State<ScannerPage> {
+class _ScannerPageState extends State<ScannerPage>
+  with SingleTickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     returnImage: false,
   );
   bool _isScanned = false;
+  late final AnimationController _animationController;
+  late final Animation<double> _animation;
 
   @override
   void dispose() {
+    _animationController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    // Make a subtle pulsating fade
+    _animationController.repeat(reverse: true);
   }
 
   void _onDetect(BarcodeCapture capture) async {
