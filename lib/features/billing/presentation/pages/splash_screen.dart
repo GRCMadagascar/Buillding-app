@@ -40,15 +40,50 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF3F0354), 
-      body: Center(
+      backgroundColor: const Color(0xFF3F0354),
+      body: SafeArea(
         child: FadeTransition(
           opacity: _animation,
           child: ScaleTransition(
             scale: _animation,
-            child: Image.asset(
-              'assets/grc_logo.png',
-              height: 120,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Top area: logo and app name
+                Padding(
+                  padding: const EdgeInsets.only(top: 48.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/grc_logo.png',
+                        height: 120,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'GRC POS System',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Bottom area: copyright
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    '© ranto nandrianina 2026',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

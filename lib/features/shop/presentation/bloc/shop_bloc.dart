@@ -21,24 +21,33 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
 
   Future<void> _onLoadShop(LoadShopEvent event, Emitter<ShopState> emit) async {
     emit(ShopLoading());
-    final result = await getShopUseCase(NoParams());
-    result.fold(
-      (failure) => emit(ShopError(failure.message)),
-      (shop) => emit(ShopLoaded(shop)),
-    );
+    try {
+      final result = await getShopUseCase(NoParams());
+      result.fold(
+        (failure) => emit(ShopError(failure.message)),
+        (shop) => emit(ShopLoaded(shop)),
+      );
+    } catch (e, st) {
+      // Catch unexpected exceptions and emit an error state so the UI can react
+      emit(ShopError('Failed to load shop: ${e.toString()}'));
+    }
   }
 
   Future<void> _onUpdateShop(
       UpdateShopEvent event, Emitter<ShopState> emit) async {
     emit(ShopLoading());
-    final result = await updateShopUseCase(event.shop);
-    result.fold(
-      (failure) => emit(ShopError(failure.message)),
-      (_) {
-        // Reload shop to update state with latest data (though local is same)
-        add(LoadShopEvent());
-        emit(ShopOperationSuccess());
-      },
-    );
+    try {
+      final result = await updateShopUseCase(event.shop);
+      result.fold(
+        (failure) => emit(ShopError(failure.message)),
+        (_) {
+          // Emit success then reload the latest shop data
+          emit(ShopOperationSuccess());
+          add(LoadShopEvent());
+        },
+      );
+    } catch (e, st) {
+      emit(ShopError('Failed to update shop: ${e.toString()}'));
+    }
   }
 }
