@@ -459,7 +459,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.w600)),
                         IconButton(
-                          icon: const Icon(Icons.add_shopping_cart, Color(0xFF6C63FF)),
+                          icon: Icon(Icons.add_shopping_cart, color: Color(0xFF6C63FF)),
                           onPressed: () => _showManualProductPopup(context),
                         ),
                         Text('$totalItems items total',
