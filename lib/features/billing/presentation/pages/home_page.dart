@@ -5,6 +5,8 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../billing/presentation/bloc/billing_bloc.dart';
+import 'package:billing_app/features/product/presentation/bloc/product_bloc.dart';
+import 'package:billing_app/features/product/domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
@@ -108,7 +110,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: selectedProducts.isEmpty ? null : () {
                         // Mampiditra ny entana rehetra voafidy ao amin'ny BillingBloc
                         for (var product in selectedProducts) {
-                          context.read<BillingBloc>().add(AddProductToCart(product));
+                            context.read<BillingBloc>().add(AddProductToCartEvent(product));
                         }
                         Navigator.pop(context);
                       },
@@ -570,7 +572,6 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.all(16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        spacing: 1,
         children: [
           Expanded(
             child: Column(
@@ -639,7 +640,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-        ],
         ],
       ),
     );
