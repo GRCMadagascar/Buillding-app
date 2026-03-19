@@ -125,7 +125,7 @@ class AppTheme {
             color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black.withValues(alpha: 0.6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -300,7 +300,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyText1?.color ??
+                        color: Theme.of(context).textTheme.bodyLarge?.color ??
                             Colors.black,
                         fontSize: 15,
                       ),
