@@ -1,9 +1,11 @@
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/shop.dart';
 
 part 'shop_model.g.dart';
 
 @HiveType(typeId: 1)
+@JsonSerializable()
 class ShopModel extends Shop {
   @override
   @HiveField(0)
@@ -25,12 +27,15 @@ class ShopModel extends Shop {
   final String footerText;
   @override
   @HiveField(6)
+  @JsonKey(name: 'mvolaNumber')
   final String mvolaNumber;
   @override
   @HiveField(7)
+  @JsonKey(name: 'orangeMoneyNumber')
   final String orangeMoneyNumber;
   @override
   @HiveField(8)
+  @JsonKey(name: 'airtelMoneyNumber')
   final String airtelMoneyNumber;
 
   const ShopModel({
@@ -68,6 +73,12 @@ class ShopModel extends Shop {
       airtelMoneyNumber: shop.airtelMoneyNumber,
     );
   }
+
+  // JSON (de)serialization helpers will be generated into shop_model.g.dart
+  factory ShopModel.fromJson(Map<String, dynamic> json) =>
+      _$ShopModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ShopModelToJson(this);
 
   Shop toEntity() => this;
 }

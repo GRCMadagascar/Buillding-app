@@ -65,6 +65,7 @@ flutter:
     - assets/mvola_logo.png
     - assets/orange_logo.png
     - assets/airtel_logo.png
+    - assets/delete_illustration.png
 
  # Iny andalana 65 iny akisaka kely miankavia indrindra
 flutter_launcher_icons:
