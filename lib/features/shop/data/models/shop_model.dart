@@ -23,6 +23,15 @@ class ShopModel extends Shop {
   @override
   @HiveField(5)
   final String footerText;
+  @override
+  @HiveField(6)
+  final String mvolaNumber;
+  @override
+  @HiveField(7)
+  final String orangeMoneyNumber;
+  @override
+  @HiveField(8)
+  final String airtelMoneyNumber;
 
   const ShopModel({
     required this.name,
@@ -31,6 +40,9 @@ class ShopModel extends Shop {
     required this.phoneNumber,
     required this.upiId,
     required this.footerText,
+    required this.mvolaNumber,
+    required this.orangeMoneyNumber,
+    required this.airtelMoneyNumber,
   }) : super(
           name: name,
           addressLine1: addressLine1,
@@ -38,6 +50,9 @@ class ShopModel extends Shop {
           phoneNumber: phoneNumber,
           upiId: upiId,
           footerText: footerText,
+          mvolaNumber: mvolaNumber,
+          orangeMoneyNumber: orangeMoneyNumber,
+          airtelMoneyNumber: airtelMoneyNumber,
         );
 
   factory ShopModel.fromEntity(Shop shop) {
@@ -48,6 +63,9 @@ class ShopModel extends Shop {
       phoneNumber: shop.phoneNumber,
       upiId: shop.upiId,
       footerText: shop.footerText,
+      mvolaNumber: shop.mvolaNumber,
+      orangeMoneyNumber: shop.orangeMoneyNumber,
+      airtelMoneyNumber: shop.airtelMoneyNumber,
     );
   }
 

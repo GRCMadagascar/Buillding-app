@@ -5,7 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../bloc/billing_bloc.dart';
+import 'dart:math' as math;
+import 'package:flutter/services.dart';
+import 'package:billing_app/core/utils/snackbar_helper.dart' as sbh;
+
+enum Operator { mvola, orange, airtel }
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -14,7 +20,193 @@ class CheckoutPage extends StatefulWidget {
   State<CheckoutPage> createState() => _CheckoutPageState();
 }
 
-class _CheckoutPageState extends State<CheckoutPage> {
+class _CheckoutPageState extends State<CheckoutPage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _floatController;
+  Operator? _pressedOperator;
+  // Operator selection for Mobile Money
+  Operator? _selectedOperator;
+
+  String _operatorPhone(ShopState shopState) {
+    if (shopState is ShopLoaded) {
+      switch (_selectedOperator) {
+        case Operator.mvola:
+          return shopState.shop.mvolaNumber;
+        case Operator.orange:
+          return shopState.shop.orangeMoneyNumber;
+        case Operator.airtel:
+          return shopState.shop.airtelMoneyNumber;
+        default:
+          return '';
+      }
+    }
+    return '';
+  }
+
+  Color _operatorColor() {
+    switch (_selectedOperator) {
+      case Operator.mvola:
+        return const Color(0xFF002855); // Dark Blue
+      case Operator.orange:
+        return const Color(0xFFFF8C00); // Orange
+      case Operator.airtel:
+        return const Color(0xFFD32F2F); // Red
+      default:
+        return const Color(0xFFE5E5EA);
+    }
+  }
+
+  String _operatorCode() {
+    switch (_selectedOperator) {
+      case Operator.mvola:
+        return '*111*';
+      case Operator.orange:
+        return '*130*';
+      case Operator.airtel:
+        return '*182*';
+      default:
+        return '*123*';
+    }
+  }
+
+  String _buildQrData(String phone, double amount) {
+    if (phone.isEmpty || _selectedOperator == null) return '';
+    final code = _operatorCode();
+    final ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+    final encoded = ussd.replaceAll('#', '%23');
+    return 'tel:$encoded';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  double _phaseForOperator(Operator op) {
+    switch (op) {
+      case Operator.mvola:
+        return 0.0;
+      case Operator.orange:
+        return 2 * math.pi / 3;
+      case Operator.airtel:
+        return 4 * math.pi / 3;
+    }
+  }
+
+  void _onPayPressed(ShopState shopState, double amount) async {
+    final phone = _operatorPhone(shopState);
+    if (phone.isEmpty || _selectedOperator == null) {
+      sbh.showAppSnackBar('Operator phone not configured', isError: true);
+      return;
+    }
+
+    final code = _operatorCode();
+    final ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+
+    // Show a simple dialog with the generated USSD and option to copy
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('USSD Payment'),
+        content: Text('Dial this code to pay:\n$ussd'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: ussd));
+              sbh.showAppSnackBar('USSD code copied', isError: false);
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Copy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _operatorButton(Operator op, String label) {
+    final selected = _selectedOperator == op;
+    final phase = _phaseForOperator(op);
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressedOperator = op),
+      onTapUp: (_) {
+        setState(() {
+          _pressedOperator = null;
+          _selectedOperator = op;
+        });
+      },
+      onTapCancel: () => setState(() => _pressedOperator = null),
+      child: AnimatedBuilder(
+        animation: _floatController,
+        builder: (context, child) {
+          final dy = math.sin((_floatController.value * 2 * math.pi) + phase) * 4;
+          final isPressed = _pressedOperator == op;
+          final scale = isPressed ? 0.92 : (selected ? 0.98 : 1.0);
+          return Transform.translate(
+            offset: Offset(0, dy),
+            child: Column(
+              children: [
+                AnimatedScale(
+                  scale: scale,
+                  duration: const Duration(milliseconds: 120),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: selected ? _operatorColor() : Colors.grey[100],
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selected ? _operatorColor() : Colors.transparent,
+                        width: 2,
+                      ),
+                      boxShadow: selected
+                          ? [
+                              BoxShadow(
+                                color: _operatorColor().withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: ClipOval(
+                        child: Image.asset(
+                          op == Operator.mvola
+                              ? 'assets/mvola_logo.png'
+                              : op == Operator.orange
+                                  ? 'assets/orange_logo.png'
+                                  : 'assets/airtel_logo.png',
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(label,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     const borderColor = Color(0xFFE5E5EA);
@@ -119,14 +311,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             '${item.quantity} x ${item.product.name}',
                                             TextAlign.left,
                                           ),
-                                          _buildDataCell(
-                                              '${item.product.price.toStringAsFixed(0)} Ar',
-                                              TextAlign.right,
-                                              isSubtitle: true),
-                                          _buildDataCell(
-                                              '${item.total.toStringAsFixed(0)} Ar',
-                                              TextAlign.right,
-                                              isBold: true),
+                      _buildDataCell(
+                        '${formatMGA(item.product.price)} Ar',
+                        TextAlign.right,
+                        isSubtitle: true),
+                      _buildDataCell(
+                        '${formatMGA(item.total)} Ar',
+                        TextAlign.right,
+                        isBold: true),
                                         ],
                                       );
                                     }),
@@ -172,27 +364,71 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                                 upiId.isNotEmpty
                                     ? Column(
-                                        children: [
-                                          const Text(
-                                            'Scan to Pay',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                              letterSpacing: 1.1,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          SizedBox(
-                                            width: 180,
-                                            height: 180,
-                                            child: PrettyQrView.data(
-                                              data:
-                                                  'tel:*111*1*2*1*0383343271*${billingState.totalAmount.toStringAsFixed(0)}%23',
-                                            ),
-                                          ),
-                                        ],
-                                      )
+                                            children: [
+                                              const Text(
+                                                'Mobile money payment',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                  letterSpacing: 1.1,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              // Operator selection buttons
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  _operatorButton(
+                                                      Operator.mvola, 'MVola'),
+                                                  const SizedBox(width: 12),
+                                                  _operatorButton(
+                                                      Operator.orange, 'Orange'),
+                                                  const SizedBox(width: 12),
+                                                  _operatorButton(
+                                                      Operator.airtel, 'Airtel'),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 12),
+                                              // Show QR only when operator selected
+                                              if (_selectedOperator != null)
+                                                Column(
+                                                  children: [
+                                                    Container(
+                                                      width: 190,
+                                                      height: 190,
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(12),
+                                                        border: Border.all(
+                                                            color: _operatorColor(),
+                                                            width: 4),
+                                                      ),
+                                                      child: PrettyQrView.data(
+                                                        data: _buildQrData(
+                                                            _operatorPhone(
+                                                                shopState),
+                                                            billingState
+                                                                .totalAmount),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    // Pay button triggers USSD generation
+                                                    PrimaryButton(
+                                                      onPressed: () =>
+                                                          _onPayPressed(
+                                                              shopState,
+                                                              billingState
+                                                                  .totalAmount),
+                                                      label: 'Pay',
+                                                      icon: Icons.payment,
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          )
                                     : const SizedBox.shrink(),
                                 const SizedBox(height: 15),
                                 Row(
@@ -209,7 +445,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                     ),
                                     Text(
-                                      '${billingState.totalAmount.toStringAsFixed(0)} Ar',
+                                      '${formatMGA(billingState.totalAmount)} Ariary',
                                       style: const TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,

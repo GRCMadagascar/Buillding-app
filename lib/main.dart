@@ -4,6 +4,8 @@ import 'config/routes/app_routes.dart';
 import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
+import 'core/utils/snackbar_helper.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
@@ -33,13 +35,50 @@ class MyApp extends StatelessWidget {
                 BillingBloc(getProductByBarcodeUseCase: di.sl())),
         BlocProvider<PrinterBloc>(
             create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
+        // Theme management Cubit
+        BlocProvider<ThemeCubit>(
+          create: (_) => ThemeCubit()
+            ..loadFromPersistence(),
+        ),
       ],
-      child: MaterialApp.router(
-        title: 'Mobile POS',
-        theme: AppTheme.lightTheme,
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
-      ),
+      child: BlocBuilder<ThemeCubit, ThemeMode>(builder: (context, mode) {
+        return MaterialApp.router(
+          title: 'Mobile POS',
+          // Keep the base themes from AppTheme but inject our global SnackBar style
+          theme: AppTheme.lightTheme.copyWith(
+            snackBarTheme: const SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              shape: StadiumBorder(),
+              backgroundColor: Color(0xFFD32F2F), // default error red
+              elevation: 6.0,
+              contentTextStyle: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15.0,
+              ),
+            ),
+          ),
+          darkTheme: AppTheme.darkTheme.copyWith(
+            snackBarTheme: const SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              shape: StadiumBorder(),
+              backgroundColor: Color(0xFFD32F2F),
+              elevation: 6.0,
+              contentTextStyle: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15.0,
+              ),
+            ),
+          ),
+          themeMode: mode,
+          // Use global scaffold messenger key so the helper can show snackbars
+          scaffoldMessengerKey: scaffoldMessengerKey,
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+        );
+      }),
     );
   }
 }
+

@@ -7,6 +7,9 @@ class Shop extends Equatable {
   final String phoneNumber;
   final String upiId;
   final String footerText;
+  final String mvolaNumber;
+  final String orangeMoneyNumber;
+  final String airtelMoneyNumber;
 
   const Shop({
     this.name = '',
@@ -15,6 +18,9 @@ class Shop extends Equatable {
     this.phoneNumber = '',
     this.upiId = '',
     this.footerText = '',
+    this.mvolaNumber = '',
+    this.orangeMoneyNumber = '',
+    this.airtelMoneyNumber = '',
   });
 
   Shop copyWith({
@@ -24,6 +30,9 @@ class Shop extends Equatable {
     String? phoneNumber,
     String? upiId,
     String? footerText,
+    String? mvolaNumber,
+    String? orangeMoneyNumber,
+    String? airtelMoneyNumber,
   }) {
     return Shop(
       name: name ?? this.name,
@@ -32,10 +41,22 @@ class Shop extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       upiId: upiId ?? this.upiId,
       footerText: footerText ?? this.footerText,
+      mvolaNumber: mvolaNumber ?? this.mvolaNumber,
+      orangeMoneyNumber: orangeMoneyNumber ?? this.orangeMoneyNumber,
+      airtelMoneyNumber: airtelMoneyNumber ?? this.airtelMoneyNumber,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [name, addressLine1, addressLine2, phoneNumber, upiId, footerText];
+  List<Object?> get props => [
+        name,
+        addressLine1,
+        addressLine2,
+        phoneNumber,
+        upiId,
+        footerText,
+        mvolaNumber,
+        orangeMoneyNumber,
+        airtelMoneyNumber,
+      ];
 }

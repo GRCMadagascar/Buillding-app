@@ -23,6 +23,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _phoneController;
   late TextEditingController _upiController;
   late TextEditingController _footerController;
+  late TextEditingController _mvolaController;
+  late TextEditingController _orangeController;
+  late TextEditingController _airtelController;
 
   @override
   void initState() {
@@ -32,6 +35,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address2Controller = TextEditingController();
     _phoneController = TextEditingController();
     _footerController = TextEditingController();
+  _mvolaController = TextEditingController(text: '0383664786');
+  _orangeController = TextEditingController(text: '0372177785');
+  _airtelController = TextEditingController(text: '0332177785');
 
     // Load shop data
     context.read<ShopBloc>().add(LoadShopEvent());
@@ -45,6 +51,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       _phoneController.text = shop.phoneNumber;
       _upiController.text = shop.upiId;
       _footerController.text = shop.footerText;
+      _mvolaController.text = shop.mvolaNumber;
+      _orangeController.text = shop.orangeMoneyNumber;
+      _airtelController.text = shop.airtelMoneyNumber;
     }
   }
 
@@ -56,6 +65,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _phoneController.dispose();
     _upiController.dispose();
     _footerController.dispose();
+    _mvolaController.dispose();
+    _orangeController.dispose();
+    _airtelController.dispose();
     super.dispose();
   }
 
@@ -68,6 +80,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         phoneNumber: _phoneController.text,
         upiId: _upiController.text,
         footerText: _footerController.text,
+        mvolaNumber: _mvolaController.text,
+        orangeMoneyNumber: _orangeController.text,
+        airtelMoneyNumber: _airtelController.text,
       );
 
       context.read<ShopBloc>().add(UpdateShopEvent(shop));
@@ -147,6 +162,38 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     _buildTextField(
                       controller: _phoneController,
                       hint: '+261... ... ...',
+                      keyboardType: TextInputType.phone,
+                      validator: AppValidators.required('Required'),
+                    ),
+                    const SizedBox(height: 15),
+                    Text('Mobile Money Numbers',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                        )),
+                    const SizedBox(height: 8),
+                    const InputLabel(text: 'MVola'),
+                    _buildTextField(
+                      controller: _mvolaController,
+                      hint: '0383664786',
+                      keyboardType: TextInputType.phone,
+                      validator: AppValidators.required('Required'),
+                    ),
+                    const SizedBox(height: 12),
+                    const InputLabel(text: 'Orange Money'),
+                    _buildTextField(
+                      controller: _orangeController,
+                      hint: '0372177785',
+                      keyboardType: TextInputType.phone,
+                      validator: AppValidators.required('Required'),
+                    ),
+                    const SizedBox(height: 12),
+                    const InputLabel(text: 'Airtel Money'),
+                    _buildTextField(
+                      controller: _airtelController,
+                      hint: '0332177785',
                       keyboardType: TextInputType.phone,
                       validator: AppValidators.required('Required'),
                     ),

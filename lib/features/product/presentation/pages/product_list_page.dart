@@ -5,6 +5,7 @@ import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
@@ -194,7 +195,7 @@ class _ProductListPageState extends State<ProductListPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${product.price.toStringAsFixed(0)} Ar',
+                                  '${formatMGA(product.price)} Ar',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       color: Colors.grey[600]),
@@ -260,25 +261,108 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _confirmDelete(BuildContext context, Product product) {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (innerContext) {
-        return AlertDialog(
-          title: const Text('Delete Product'),
-          content: Text('Are you sure you want to delete ${product.name}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(innerContext),
-              child: const Text('Cancel'),
+      barrierDismissible: true,
+      barrierLabel: 'Delete Product',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.86,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).dialogBackgroundColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Illustration (add `assets/delete_illustration.png` to your assets)
+                  Image.asset(
+                    'assets/delete_illustration.png',
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Delete Product',
+                    style: const TextStyle(
+                        color: Color(0xFFD32F2F),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyText1?.color ??
+                            Colors.black,
+                        fontSize: 15,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Are you sure you want to delete '),
+                        TextSpan(
+                            text: product.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const TextSpan(text: '?'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Cancel button: transparent bg, violet border, violet text, X icon
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        icon: const Icon(Icons.close, color: AppTheme.primaryColor),
+                        label: const Text('Cancel',
+                            style: TextStyle(color: AppTheme.primaryColor)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primaryColor),
+                          backgroundColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Delete button: solid violet background, white text, trash icon
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          // trigger delete event
+                          context.read<ProductBloc>().add(DeleteProduct(product.id));
+                          Navigator.of(ctx).pop();
+                        },
+                        icon: const Icon(Icons.delete, color: Colors.white),
+                        label: const Text('Delete',
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                context.read<ProductBloc>().add(DeleteProduct(product.id));
-                Navigator.pop(innerContext);
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
+          ),
+        );
+      },
+      transitionBuilder: (ctx, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
         );
       },
     );
