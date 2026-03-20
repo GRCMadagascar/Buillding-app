@@ -49,155 +49,169 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             // Profile Section (cover + profile + edit buttons)
-          Container(
-            width: double.infinity,
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                // Cover image with rounded corners
-                Positioned(
-                  top: 0,
-                  left: 16,
-                  right: 16,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: (_coverImage != null)
-                        ? Image.file(
-                            File(_coverImage!.path),
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.asset(
-                            'assets/Fond.jpg',
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                ),
-
-                // Pencil button for cover
-                Positioned(
-                  top: 8,
-                  right: 24,
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: const Icon(Icons.edit, size: 18),
-                      color: AppTheme.primaryColor,
-                      onPressed: () async {
-                        final picked = await _picker.pickImage(source: ImageSource.gallery);
-                        if (picked != null) setState(() => _coverImage = picked);
-                      },
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+              child: Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  // Cover image with rounded corners
+                  Positioned(
+                    top: 0,
+                    left: 16,
+                    right: 16,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: (_coverImage != null)
+                          ? Image.file(
+                              File(_coverImage!.path),
+                              height: 160,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              'assets/Fond.jpg',
+                              height: 160,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   ),
-                ),
 
-                // Profile circle overlapping the cover
-                Positioned(
-                  top: 100,
-                  child: BlocBuilder<ShopBloc, ShopState>(
-                    builder: (context, state) {
-                      String shopName = 'Diary Fashion';
-                      if (state is ShopLoaded && state.shop.name.isNotEmpty) {
-                        shopName = state.shop.name;
-                      }
+                  // Pencil button for cover
+                  Positioned(
+                    top: 8,
+                    right: 24,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        color: AppTheme.primaryColor,
+                        onPressed: () async {
+                          final picked = await _picker.pickImage(
+                              source: ImageSource.gallery);
+                          if (picked != null)
+                            setState(() => _coverImage = picked);
+                        },
+                      ),
+                    ),
+                  ),
 
-                      return Column(
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // White border circle
-                              Container(
-                                width: 110,
-                                height: 110,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
+                  // Profile circle overlapping the cover
+                  Positioned(
+                    top: 100,
+                    child: BlocBuilder<ShopBloc, ShopState>(
+                      builder: (context, state) {
+                        String shopName = 'Diary Fashion';
+                        if (state is ShopLoaded && state.shop.name.isNotEmpty) {
+                          shopName = state.shop.name;
+                        }
+
+                        return Column(
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // White border circle
+                                Container(
+                                  width: 110,
+                                  height: 110,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                              ),
-                              // Profile image
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor,
-                                  shape: BoxShape.circle,
-                                  image: _profileImage != null
-                                      ? DecorationImage(
-                                          image: FileImage(File(_profileImage!.path)),
-                                          fit: BoxFit.cover,
+                                // Profile image
+                                Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    shape: BoxShape.circle,
+                                    image: _profileImage != null
+                                        ? DecorationImage(
+                                            image: FileImage(
+                                                File(_profileImage!.path)),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: _profileImage == null
+                                      ? Text(
+                                          shopName.isNotEmpty
+                                              ? shopName
+                                                  .split(' ')
+                                                  .map((p) =>
+                                                      p.isNotEmpty ? p[0] : '')
+                                                  .take(2)
+                                                  .join()
+                                                  .toUpperCase()
+                                              : 'S',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold),
                                         )
                                       : null,
                                 ),
-                                alignment: Alignment.center,
-                                child: _profileImage == null
-                                    ? Text(
-                                        shopName.isNotEmpty
-                                            ? shopName.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join().toUpperCase()
-                                            : 'S',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold),
-                                      )
-                                    : null,
-                              ),
 
-                              // Pencil for profile
-                              Positioned(
-                                right: -6,
-                                bottom: -6,
-                                child: CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: Colors.white,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.edit, size: 16),
-                                    color: AppTheme.primaryColor,
-                                    onPressed: () async {
-                                      final picked = await _picker.pickImage(source: ImageSource.gallery);
-                                      if (picked != null) setState(() => _profileImage = picked);
-                                    },
+                                // Pencil for profile
+                                Positioned(
+                                  right: -6,
+                                  bottom: -6,
+                                  child: CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Colors.white,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.edit, size: 16),
+                                      color: AppTheme.primaryColor,
+                                      onPressed: () async {
+                                        final picked = await _picker.pickImage(
+                                            source: ImageSource.gallery);
+                                        if (picked != null)
+                                          setState(
+                                              () => _profileImage = picked);
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Shop name overlay styled like a button
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryColor.withValues(alpha: 0.15),
-                                  blurRadius: 8,
-                                )
                               ],
                             ),
-                            child: Text(
-                              shopName,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
+                            const SizedBox(height: 12),
+                            // Shop name overlay styled like a button
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.15),
+                                    blurRadius: 8,
+                                  )
+                                ],
+                              ),
+                              child: Text(
+                                shopName,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
             const SizedBox(height: 24),
 
@@ -333,7 +347,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       value: isDark,
                       activeThumbColor: const Color(0xFF6C63FF),
                       onChanged: (v) {
-                        context.read<ThemeCubit>().setThemeMode(v ? ThemeMode.dark : ThemeMode.light);
+                        context
+                            .read<ThemeCubit>()
+                            .setThemeMode(v ? ThemeMode.dark : ThemeMode.light);
                       },
                     ),
                   );
@@ -343,18 +359,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-          const SizedBox(height: 20),
-          const Center(
-            child: Text(
-              "Edited by | Ranto Nandrianina 2026",
-              style: TextStyle(
-                fontSize: 20,
-                color: Color(0xFF6C63FF),
-                fontStyle: FontStyle.italic,
+            const SizedBox(height: 20),
+            const Center(
+              child: Text(
+                "Edited by | Ranto Nandrianina 2026",
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Color(0xFF6C63FF),
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -412,14 +428,22 @@ class _SettingsPageState extends State<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            color: AppTheme.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppTheme.primaryColor, size: 20),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        subtitle: subtitleWidget ?? (subtitle != null ? Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])) : null),
-        trailing: trailingWidget ?? (trailingIcon != null ? Icon(trailingIcon, color: Colors.grey[400]) : null),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: subtitleWidget ??
+            (subtitle != null
+                ? Text(subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                : null),
+        trailing: trailingWidget ??
+            (trailingIcon != null
+                ? Icon(trailingIcon, color: Colors.grey[400])
+                : null),
       ),
     );
   }

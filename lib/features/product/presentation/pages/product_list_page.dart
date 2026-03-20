@@ -71,48 +71,50 @@ class _ProductListPageState extends State<ProductListPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: BlocBuilder<ProductBloc, ProductState>(
-                builder: (context, state) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _searchController,
-                          textCapitalization: TextCapitalization.words,
-                          decoration: InputDecoration(
-                            hintText: 'Scan or enter barcode',
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.grey[400],
+              builder: (context, state) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _searchController,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: InputDecoration(
+                              hintText: 'Scan or enter barcode',
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.grey[400],
+                              ),
                             ),
+                            validator: AppValidators.required(
+                                'Please enter a barcode'),
                           ),
-                          validator:
-                              AppValidators.required('Please enter a barcode'),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.qr_code_scanner,
+                                color: AppTheme.primaryColor),
+                            onPressed: () => _scanQR(state.products),
+                            padding: const EdgeInsets.all(15),
+                          ),
                         ),
-                        child: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner,
-                              color: AppTheme.primaryColor),
-                          onPressed: () => _scanQR(state.products),
-                          padding: const EdgeInsets.all(15),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text('Tap the icon to open camera scanner',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
-                ],
-              );
-            }),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text('Tap the icon to open camera scanner',
+                        style:
+                            TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
+                  ],
+                );
+              },
+            ),
           ),
 
           Expanded(
@@ -208,8 +210,7 @@ class _ProductListPageState extends State<ProductListPage> {
                             children: [
                               Container(
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor
-                                      .withValues(alpha: 0.1),
+                                  color: AppTheme.primaryColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: IconButton(
@@ -226,7 +227,7 @@ class _ProductListPageState extends State<ProductListPage> {
                               const SizedBox(width: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.1),
+                                  color: Colors.red.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: IconButton(
@@ -305,10 +306,12 @@ class _ProductListPageState extends State<ProductListPage> {
                         fontSize: 15,
                       ),
                       children: [
-                        const TextSpan(text: 'Are you sure you want to delete '),
+                        const TextSpan(
+                            text: 'Are you sure you want to delete '),
                         TextSpan(
                             text: product.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         const TextSpan(text: '?'),
                       ],
                     ),
@@ -320,7 +323,8 @@ class _ProductListPageState extends State<ProductListPage> {
                       // Cancel button: transparent bg, violet border, violet text, X icon
                       OutlinedButton.icon(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        icon: const Icon(Icons.close, color: AppTheme.primaryColor),
+                        icon: const Icon(Icons.close,
+                            color: AppTheme.primaryColor),
                         label: const Text('Cancel',
                             style: TextStyle(color: AppTheme.primaryColor)),
                         style: OutlinedButton.styleFrom(
@@ -337,7 +341,9 @@ class _ProductListPageState extends State<ProductListPage> {
                       ElevatedButton.icon(
                         onPressed: () {
                           // trigger delete event
-                          context.read<ProductBloc>().add(DeleteProduct(product.id));
+                          context
+                              .read<ProductBloc>()
+                              .add(DeleteProduct(product.id));
                           Navigator.of(ctx).pop();
                         },
                         icon: const Icon(Icons.delete, color: Colors.white),
