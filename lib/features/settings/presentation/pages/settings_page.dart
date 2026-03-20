@@ -49,167 +49,217 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             // Profile Section (cover + profile + edit buttons)
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  // Cover image with rounded corners
-                  Positioned(
-                    top: 0,
-                    left: 16,
-                    right: 16,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: (_coverImage != null)
-                          ? Image.file(
-                              File(_coverImage!.path),
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              'assets/Fond.jpg',
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SizedBox(
+                height: 260,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Rounded card background for luxury feel
+                    Positioned.fill(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 40),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
                             ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
 
-                  // Pencil button for cover
-                  Positioned(
-                    top: 8,
-                    right: 24,
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Colors.white,
-                      child: IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        color: AppTheme.primaryColor,
-                        onPressed: () async {
-                          final picked = await _picker.pickImage(
-                              source: ImageSource.gallery);
-                          if (picked != null)
-                            setState(() => _coverImage = picked);
+                    // Cover image with rounded corners
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: (_coverImage != null)
+                            ? Image.file(
+                                File(_coverImage!.path),
+                                height: 160,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/Fond.jpg',
+                                height: 160,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+
+                    // Pencil button for cover
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Material(
+                        shape: const CircleBorder(),
+                        elevation: 4,
+                        color: Colors.white,
+                        child: IconButton(
+                          icon: const Icon(Icons.edit, size: 18),
+                          color: AppTheme.primaryColor,
+                          onPressed: () async {
+                            final picked = await _picker.pickImage(
+                                source: ImageSource.gallery);
+                            if (picked != null)
+                              setState(() => _coverImage = picked);
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // Profile circle overlapping the cover
+                    Positioned(
+                      top: 100,
+                      child: BlocBuilder<ShopBloc, ShopState>(
+                        builder: (context, state) {
+                          String shopName = 'Diary Fashion';
+                          if (state is ShopLoaded &&
+                              state.shop.name.isNotEmpty) {
+                            shopName = state.shop.name;
+                          }
+
+                          return Column(
+                            children: [
+                              SizedBox(
+                                width: 120,
+                                height: 120,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    // White border circle
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Container(
+                                        width: 116,
+                                        height: 116,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Profile image
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Container(
+                                        width: 104,
+                                        height: 104,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryColor,
+                                          shape: BoxShape.circle,
+                                          image: _profileImage != null
+                                              ? DecorationImage(
+                                                  image: FileImage(File(
+                                                      _profileImage!.path)),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withOpacity(0.08),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ],
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: _profileImage == null
+                                            ? Text(
+                                                shopName.isNotEmpty
+                                                    ? shopName
+                                                        .split(' ')
+                                                        .map((p) => p.isNotEmpty
+                                                            ? p[0]
+                                                            : '')
+                                                        .take(2)
+                                                        .join()
+                                                        .toUpperCase()
+                                                    : 'S',
+                                                style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 30,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+
+                                    // Pencil for profile (bottom right)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Material(
+                                        shape: const CircleBorder(),
+                                        elevation: 4,
+                                        color: Colors.white,
+                                        child: IconButton(
+                                          padding: const EdgeInsets.all(6),
+                                          icon:
+                                              const Icon(Icons.edit, size: 16),
+                                          color: AppTheme.primaryColor,
+                                          onPressed: () async {
+                                            final picked =
+                                                await _picker.pickImage(
+                                                    source:
+                                                        ImageSource.gallery);
+                                            if (picked != null)
+                                              setState(
+                                                  () => _profileImage = picked);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Shop name overlay styled like a button
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor,
+                                  borderRadius: BorderRadius.circular(28),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primaryColor
+                                          .withOpacity(0.12),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    )
+                                  ],
+                                ),
+                                child: Text(
+                                  shopName,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          );
                         },
                       ),
                     ),
-                  ),
-
-                  // Profile circle overlapping the cover
-                  Positioned(
-                    top: 100,
-                    child: BlocBuilder<ShopBloc, ShopState>(
-                      builder: (context, state) {
-                        String shopName = 'Diary Fashion';
-                        if (state is ShopLoaded && state.shop.name.isNotEmpty) {
-                          shopName = state.shop.name;
-                        }
-
-                        return Column(
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                // White border circle
-                                Container(
-                                  width: 110,
-                                  height: 110,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                // Profile image
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor,
-                                    shape: BoxShape.circle,
-                                    image: _profileImage != null
-                                        ? DecorationImage(
-                                            image: FileImage(
-                                                File(_profileImage!.path)),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: _profileImage == null
-                                      ? Text(
-                                          shopName.isNotEmpty
-                                              ? shopName
-                                                  .split(' ')
-                                                  .map((p) =>
-                                                      p.isNotEmpty ? p[0] : '')
-                                                  .take(2)
-                                                  .join()
-                                                  .toUpperCase()
-                                              : 'S',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.bold),
-                                        )
-                                      : null,
-                                ),
-
-                                // Pencil for profile
-                                Positioned(
-                                  right: -6,
-                                  bottom: -6,
-                                  child: CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: Colors.white,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.edit, size: 16),
-                                      color: AppTheme.primaryColor,
-                                      onPressed: () async {
-                                        final picked = await _picker.pickImage(
-                                            source: ImageSource.gallery);
-                                        if (picked != null)
-                                          setState(
-                                              () => _profileImage = picked);
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            // Shop name overlay styled like a button
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        AppTheme.primaryColor.withOpacity(0.15),
-                                    blurRadius: 8,
-                                  )
-                                ],
-                              ),
-                              child: Text(
-                                shopName,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
