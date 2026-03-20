@@ -348,8 +348,8 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Text(
               "Edited by | Ranto Nandrianina 2026",
               style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.withValues(alpha: 0.8),
+                fontSize: 20,
+                color: Color(0xFF6C63FF),
                 fontStyle: FontStyle.italic,
               ),
             ),
