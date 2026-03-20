@@ -36,9 +36,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _phoneController = TextEditingController();
     _upiController = TextEditingController();
     _footerController = TextEditingController();
-    _mvolaController = TextEditingController(text: '0383664786');
-    _orangeController = TextEditingController(text: '0372177785');
-    _airtelController = TextEditingController(text: '0332177785');
+    _mvolaController = TextEditingController(text: '');
+    _orangeController = TextEditingController(text: '');
+    _airtelController = TextEditingController(text: '');
 
     // Load shop data
     context.read<ShopBloc>().add(LoadShopEvent());
@@ -151,7 +151,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
-                          color: const Color.fromARGB(255, 165, 98, 10)
+                          color: const Color.fromARGB(255, 165, 96, 6)
                               .withOpacity(0.8),
                         )),
                     const SizedBox(
@@ -165,27 +165,27 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     const InputLabel(text: 'Shop Name'),
                     _buildTextField(
                       controller: _nameController,
-                      hint: 'e.g. QuickMart Superstore',
+                      hint: 'Shop Name',
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Address Line 1'),
                     _buildTextField(
                       controller: _address1Controller,
-                      hint: 'address',
+                      hint: 'Address',
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Address Line 2 (Optional)'),
                     _buildTextField(
                       controller: _address2Controller,
-                      hint: 'Region?',
+                      hint: 'Address (Optional)',
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Phone Number'),
                     _buildTextField(
                       controller: _phoneController,
-                      hint: '+261... ... ...',
+                      hint: 'Phone Number',
                       keyboardType: TextInputType.phone,
                       validator: AppValidators.required('Required'),
                     ),
@@ -310,6 +310,19 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(
+          color:
+              Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
+                  Colors.grey[500],
+          fontWeight: FontWeight.w500,
+        ),
+        border: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
   }
