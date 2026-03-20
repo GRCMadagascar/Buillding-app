@@ -133,16 +133,28 @@ class _AddProductPageState extends State<AddProductPage> {
                   TextFormField(
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color ??
+                          Colors.black,
+                    ),
+                    decoration: InputDecoration(
                       hintText: '0',
-                      prefixText: ' Ar',
-                      prefixStyle: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black),
+                      suffixText: 'Ar',
+                      suffixStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: (Theme.of(context).textTheme.bodySmall?.color ??
+                                Colors.black)
+                            .withOpacity(0.8),
+                      ),
+                      // remove any prefix so the unit sits on the right
                     ),
                     validator: AppValidators.price,
-                    onSaved: (value) => _price = double.parse(value!),
+                    onSaved: (value) =>
+                        _price = double.parse(value!.replaceAll(',', '')),
                   ),
                 ],
               ),
