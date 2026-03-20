@@ -1,13 +1,16 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_settings/app_settings.dart';
 
-import '../../../../core/data/hive_database.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../../../core/utils/snackbar_helper.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../bloc/printer_bloc.dart';
+import '../bloc/printer_event.dart';
+import '../bloc/printer_state.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,597 +20,430 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  static const Color _backgroundBlack = Color(0xFF000000);
-  static const Color _gold = Color(0xFFD4AF37);
-  static const Color _danger = Color(0xFFD32F2F);
-
-  static const String _pushNotificationsKey = 'pushNotificationsEnabled';
-  static const String _biometricLoginKey = 'biometricLoginEnabled';
-
-  bool _pushNotificationsEnabled = true;
-  bool _biometricLoginEnabled = false;
-
+  final ImagePicker _picker = ImagePicker();
+  XFile? _coverImage;
+  XFile? _profileImage;
   @override
   void initState() {
     super.initState();
-    _loadPreferences();
-  }
-
-  void _loadPreferences() {
-    final settings = HiveDatabase.settingsBox;
-    setState(() {
-      _pushNotificationsEnabled =
-          settings.get(_pushNotificationsKey, defaultValue: true) as bool;
-      _biometricLoginEnabled =
-          settings.get(_biometricLoginKey, defaultValue: false) as bool;
-    });
-  }
-
-  Future<void> _savePreference(String key, bool value) async {
-    await HiveDatabase.settingsBox.put(key, value);
-  }
-
-  Future<void> _togglePushNotifications(bool value) async {
-    setState(() => _pushNotificationsEnabled = value);
-    await _savePreference(_pushNotificationsKey, value);
-  }
-
-  Future<void> _toggleBiometricLogin(bool value) async {
-    setState(() => _biometricLoginEnabled = value);
-    await _savePreference(_biometricLoginKey, value);
-  }
-
-  void _showComingSoonMessage(String label) {
-    showAppSnackBarWithContext(
-      context,
-      '$label will be available in a future update.',
-      isError: false,
-    );
-  }
-
-  void _handleLogout() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF111111),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text(
-            'Logout',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            'Do you want to sign out of the PGR fintech workspace?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: _danger,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.go('/splash');
-              },
-              child: const Text('Logout'),
-            ),
-          ],
-        );
-      },
-    );
+    // Re-initialize printer state whenever settings page opens
+    context.read<PrinterBloc>().add(InitPrinterEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final size = mediaQuery.size;
-    final horizontalPadding = size.width < 420 ? 18.0 : size.width * 0.06;
-    const topSpacing = 12.0;
-
     return Scaffold(
-      backgroundColor: _backgroundBlack,
-      body: Stack(
-        children: [
-          const _LuxuryBackground(),
-          SafeArea(
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                topSpacing,
-                horizontalPadding,
-                28,
+      appBar: AppBar(
+        title: const Text('Settings',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left,
+              size: 28, color: Theme.of(context).primaryColor),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Profile Section (cover + profile + edit buttons)
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+              child: Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  // Cover image with rounded corners
+                  Positioned(
+                    top: 0,
+                    left: 16,
+                    right: 16,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: (_coverImage != null)
+                          ? Image.file(
+                              File(_coverImage!.path),
+                              height: 160,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              'assets/Fond.jpg',
+                              height: 160,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
+
+                  // Pencil button for cover
+                  Positioned(
+                    top: 8,
+                    right: 24,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        color: AppTheme.primaryColor,
+                        onPressed: () async {
+                          final picked = await _picker.pickImage(
+                              source: ImageSource.gallery);
+                          if (picked != null)
+                            setState(() => _coverImage = picked);
+                        },
+                      ),
+                    ),
+                  ),
+
+                  // Profile circle overlapping the cover
+                  Positioned(
+                    top: 100,
+                    child: BlocBuilder<ShopBloc, ShopState>(
+                      builder: (context, state) {
+                        String shopName = 'Diary Fashion';
+                        if (state is ShopLoaded && state.shop.name.isNotEmpty) {
+                          shopName = state.shop.name;
+                        }
+
+                        return Column(
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // White border circle
+                                Container(
+                                  width: 110,
+                                  height: 110,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                // Profile image
+                                Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    shape: BoxShape.circle,
+                                    image: _profileImage != null
+                                        ? DecorationImage(
+                                            image: FileImage(
+                                                File(_profileImage!.path)),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: _profileImage == null
+                                      ? Text(
+                                          shopName.isNotEmpty
+                                              ? shopName
+                                                  .split(' ')
+                                                  .map((p) =>
+                                                      p.isNotEmpty ? p[0] : '')
+                                                  .take(2)
+                                                  .join()
+                                                  .toUpperCase()
+                                              : 'S',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold),
+                                        )
+                                      : null,
+                                ),
+
+                                // Pencil for profile
+                                Positioned(
+                                  right: -6,
+                                  bottom: -6,
+                                  child: CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Colors.white,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.edit, size: 16),
+                                      color: AppTheme.primaryColor,
+                                      onPressed: () async {
+                                        final picked = await _picker.pickImage(
+                                            source: ImageSource.gallery);
+                                        if (picked != null)
+                                          setState(
+                                              () => _profileImage = picked);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            // Shop name overlay styled like a button
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.15),
+                                    blurRadius: 8,
+                                  )
+                                ],
+                              ),
+                              child: Text(
+                                shopName,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Management Section
+            _buildSectionHeader('Management'),
+            _buildListGroup(
               children: [
-                _buildTopBar(context),
-                const SizedBox(height: 20),
-                _buildProfileHeader(),
-                const SizedBox(height: 24),
-                _buildSectionLabel('App Settings'),
-                const SizedBox(height: 12),
-                _buildAppSettingsSection(),
-                const SizedBox(height: 24),
-                _buildSectionLabel('Account Management'),
-                const SizedBox(height: 12),
-                _buildAccountSection(),
-                const SizedBox(height: 24),
-                _buildSectionLabel('Information'),
-                const SizedBox(height: 12),
-                _buildInfoSection(),
+                _buildListItem(
+                  icon: Icons.qr_code_scanner,
+                  title: 'Products',
+                  subtitle: 'Manage stock and barcodes',
+                  onTap: () => context.push('/products'),
+                ),
+                _buildDivider(),
+                _buildListItem(
+                  icon: Icons.storefront,
+                  title: 'Shop Details',
+                  subtitle: 'Edit business info & address',
+                  onTap: () => context.push('/shop'),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildTopBar(BuildContext context) {
-    return Row(
-      children: [
-        _GlassIconButton(
-          icon: Icons.chevron_left_rounded,
-          onTap: () => context.pop(),
-        ),
-        const Spacer(),
-        const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const Spacer(),
-        const SizedBox(width: 52),
-      ],
-    );
-  }
+            const SizedBox(height: 24),
 
-  Widget _buildProfileHeader() {
-    return BlocBuilder<ShopBloc, ShopState>(
-      builder: (context, state) {
-        var displayName = 'PGR Fintech';
-        var subtitle = 'secure@pgr-fintech.app';
-
-        if (state is ShopLoaded) {
-          if (state.shop.name.trim().isNotEmpty) {
-            displayName = state.shop.name.trim();
-          }
-          if (state.shop.phoneNumber.trim().isNotEmpty) {
-            subtitle = state.shop.phoneNumber.trim();
-          }
-        }
-
-        final initials = displayName
-            .split(' ')
-            .where((part) => part.isNotEmpty)
-            .take(2)
-            .map((part) => part[0].toUpperCase())
-            .join();
-
-        return _GlassSection(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF5DE8A), _gold],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _gold.withOpacity(0.35),
-                      blurRadius: 24,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  initials.isEmpty ? 'PG' : initials,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            // Hardware Section
+            _buildSectionHeader('Hardware'),
+            BlocConsumer<PrinterBloc, PrinterState>(
+              listener: (context, state) {
+                if (state.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(state.errorMessage!),
+                      backgroundColor: Colors.red));
+                } else if (state.status == PrinterStatus.connected) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Connected to printer'),
+                      backgroundColor: Colors.green));
+                }
+              },
+              builder: (context, state) {
+                return _buildListGroup(
                   children: [
-                    const Text(
-                      'User Profile',
-                      style: TextStyle(
-                        color: Color(0x99FFFFFF),
-                        fontSize: 12,
-                        letterSpacing: 1.4,
-                        fontWeight: FontWeight.w600,
+                    _buildListItem(
+                      icon: Icons.print,
+                      title: 'Print Device',
+                      subtitleWidget: Row(
+                        children: [
+                          Text(
+                            state.connectedMac != null
+                                ? (state.connectedName ?? 'Printer connected')
+                                : 'No printer connected',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[500]),
+                          ),
+                          if (state.connectedMac != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                  color: Colors.teal[100],
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.teal[200]!)),
+                              child: Text(
+                                'CONNECTED',
+                                style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal[700]),
+                              ),
+                            ),
+                          ]
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Color(0xCCFFFFFF),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                      trailingWidget: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (state.status == PrinterStatus.scanning ||
+                              state.status == PrinterStatus.connecting)
+                            const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
+                          else
+                            IconButton(
+                              icon: const Icon(Icons.refresh),
+                              onPressed: () => context
+                                  .read<PrinterBloc>()
+                                  .add(RefreshPrinterEvent()),
+                              color: AppTheme.primaryColor,
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.settings),
+                            onPressed: () {
+                              AppSettings.openAppSettings(
+                                  type: AppSettingsType.bluetooth);
+                            },
+                            color: Colors.grey,
+                          ),
+                        ],
                       ),
                     ),
                   ],
+                );
+              },
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Text(
+                "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
+                style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey[500]),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Appearance / Dark Mode
+            _buildSectionHeader('Appearance'),
+            _buildListGroup(
+              children: [
+                BlocBuilder<ThemeCubit, ThemeMode>(builder: (context, mode) {
+                  final isDark = mode == ThemeMode.dark;
+                  return _buildListItem(
+                    icon: Icons.dark_mode,
+                    title: 'Dark Mode',
+                    subtitle: isDark ? 'Enabled' : 'Disabled',
+                    trailingWidget: Switch(
+                      value: isDark,
+                      activeThumbColor: const Color(0xFF6C63FF),
+                      onChanged: (v) {
+                        context
+                            .read<ThemeCubit>()
+                            .setThemeMode(v ? ThemeMode.dark : ThemeMode.light);
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            const SizedBox(height: 20),
+            const Center(
+              child: Text(
+                "Edited by | Ranto Nandrianina 2026",
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Color(0xFF6C63FF),
+                  fontStyle: FontStyle.italic,
                 ),
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAppSettingsSection() {
-    return Column(
-      children: [
-        BlocBuilder<ThemeCubit, ThemeMode>(
-          builder: (context, mode) {
-            final isDarkMode = mode == ThemeMode.dark;
-            return _GlassSettingTile(
-              icon: Icons.dark_mode_rounded,
-              title: 'Dark Mode',
-              subtitle: 'Keep the interface in luxury dark mode.',
-              trailing: Switch.adaptive(
-                value: isDarkMode,
-                activeColor: _gold,
-                activeTrackColor: _gold.withOpacity(0.35),
-                inactiveThumbColor: Colors.white,
-                inactiveTrackColor: Colors.white12,
-                onChanged: (value) {
-                  context
-                      .read<ThemeCubit>()
-                      .setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
-                },
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.notifications_active_outlined,
-          title: 'Push Notifications',
-          subtitle: 'Receive payment alerts and account activity updates.',
-          trailing: Switch.adaptive(
-            value: _pushNotificationsEnabled,
-            activeColor: _gold,
-            activeTrackColor: _gold.withOpacity(0.35),
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.white12,
-            onChanged: _togglePushNotifications,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.fingerprint_rounded,
-          title: 'Biometric Login',
-          subtitle: 'Use fingerprint or face unlock for secure access.',
-          trailing: Switch.adaptive(
-            value: _biometricLoginEnabled,
-            activeColor: _gold,
-            activeTrackColor: _gold.withOpacity(0.35),
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.white12,
-            onChanged: _toggleBiometricLogin,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAccountSection() {
-    return Column(
-      children: [
-        _GlassSettingTile(
-          icon: Icons.credit_card_rounded,
-          title: 'Payment Methods',
-          subtitle: 'Manage linked cards, wallets, and payout preferences.',
-          onTap: () => _showComingSoonMessage('Payment Methods'),
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.receipt_long_rounded,
-          title: 'Transaction History',
-          subtitle: 'Review your latest transfers, bills, and reconciliations.',
-          onTap: () => _showComingSoonMessage('Transaction History'),
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.shield_outlined,
-          title: 'Security',
-          subtitle: 'Update PIN policies, sessions, and risk protections.',
-          onTap: () => _showComingSoonMessage('Security'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoSection() {
-    return Column(
-      children: [
-        _GlassSettingTile(
-          icon: Icons.info_outline_rounded,
-          title: 'About Us',
-          subtitle: 'Learn more about the PGR fintech platform.',
-          onTap: () => _showComingSoonMessage('About Us'),
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.privacy_tip_outlined,
-          title: 'Privacy Policy',
-          subtitle: 'See how your data is protected and processed.',
-          onTap: () => _showComingSoonMessage('Privacy Policy'),
-        ),
-        const SizedBox(height: 12),
-        _GlassSettingTile(
-          icon: Icons.logout_rounded,
-          title: 'Logout',
-          subtitle: 'Sign out from this device.',
-          iconColor: _danger,
-          titleColor: const Color(0xFFFF8A80),
-          accentBorderColor: _danger.withOpacity(0.35),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: Color(0xFFFF8A80),
-          ),
-          onTap: _handleLogout,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionLabel(String text) {
-    return Text(
-      text.toUpperCase(),
-      style: const TextStyle(
-        color: Color(0xB3D4AF37),
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 2.0,
-      ),
-    );
-  }
-}
-
-class _LuxuryBackground extends StatelessWidget {
-  const _LuxuryBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF000000),
-            Color(0xFF080808),
-            Color(0xFF111111),
+            ),
+            const SizedBox(height: 10),
           ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
         ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: -120,
-            right: -80,
-            child: _GlowOrb(
-              size: 260,
-              color: Color(0x33D4AF37),
-            ),
-          ),
-          Positioned(
-            left: -70,
-            top: 220,
-            child: _GlowOrb(
-              size: 200,
-              color: Color(0x22FFFFFF),
-            ),
-          ),
-          Positioned(
-            bottom: -90,
-            right: 20,
-            child: _GlowOrb(
-              size: 220,
-              color: Color(0x26D4AF37),
-            ),
-          ),
-        ],
       ),
     );
   }
-}
 
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-  });
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+              letterSpacing: 1.2),
+        ),
+      ),
+    );
+  }
 
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildListGroup({required List<Widget> children}) {
     return Container(
-      width: size,
-      height: size,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, Colors.transparent],
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]!),
       ),
+      child: Column(children: children),
     );
   }
-}
 
-class _GlassSection extends StatelessWidget {
-  const _GlassSection({
-    required this.child,
-    this.padding = const EdgeInsets.all(16),
-    this.borderColor = const Color(0x26FFFFFF),
-  });
-
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-  final Color borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: borderColor),
-          ),
-          child: child,
-        ),
-      ),
-    );
+  Widget _buildDivider() {
+    return Divider(height: 1, thickness: 1, color: Colors.grey[50], indent: 64);
   }
-}
 
-class _GlassSettingTile extends StatelessWidget {
-  const _GlassSettingTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-    this.iconColor = const Color(0xFFD4AF37),
-    this.titleColor = Colors.white,
-    this.accentBorderColor = const Color(0x26FFFFFF),
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final Color iconColor;
-  final Color titleColor;
-  final Color accentBorderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return _GlassSection(
-      borderColor: accentBorderColor,
-      padding: EdgeInsets.zero,
+  Widget _buildListItem({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? subtitleWidget,
+    Widget? trailingWidget,
+    IconData? trailingIcon = Icons.chevron_right,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          width: 46,
-          height: 46,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: iconColor.withOpacity(0.14),
-            border: Border.all(color: iconColor.withOpacity(0.22)),
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          alignment: Alignment.center,
-          child: Icon(icon, color: iconColor, size: 22),
+          child: Icon(icon, color: AppTheme.primaryColor, size: 20),
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: titleColor,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            subtitle,
-            style: const TextStyle(
-              color: Color(0xB3FFFFFF),
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-        ),
-        trailing: trailing ??
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFFD4AF37),
-            ),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.white.withOpacity(0.08),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.16)),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-        ),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: subtitleWidget ??
+            (subtitle != null
+                ? Text(subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                : null),
+        trailing: trailingWidget ??
+            (trailingIcon != null
+                ? Icon(trailingIcon, color: Colors.grey[400])
+                : null),
       ),
     );
   }

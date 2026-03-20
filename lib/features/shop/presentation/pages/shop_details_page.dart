@@ -44,9 +44,12 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     context.read<ShopBloc>().add(LoadShopEvent());
   }
 
-  void _updateControllers(Shop shop) {
+  void _updateControllers(Shop? shop) {
+    // Defensive: shop may be null in some states; use safe defaults.
+    if (shop == null) return;
+
     // Only populate controllers when they are empty so we don't overwrite user edits.
-    if (_nameController.text.isEmpty && (shop.name).isNotEmpty) {
+    if (_nameController.text.isEmpty && shop.name.isNotEmpty) {
       _nameController.text = shop.name;
     }
     if (_address1Controller.text.isEmpty && (shop.addressLine1).isNotEmpty) {
