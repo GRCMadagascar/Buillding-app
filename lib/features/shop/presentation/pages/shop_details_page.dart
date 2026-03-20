@@ -45,15 +45,34 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   }
 
   void _updateControllers(Shop shop) {
-    if (_nameController.text.isEmpty && shop.name.isNotEmpty) {
+    // Only populate controllers when they are empty so we don't overwrite user edits.
+    if (_nameController.text.isEmpty && (shop.name).isNotEmpty) {
       _nameController.text = shop.name;
+    }
+    if (_address1Controller.text.isEmpty && (shop.addressLine1).isNotEmpty) {
       _address1Controller.text = shop.addressLine1;
+    }
+    if (_address2Controller.text.isEmpty && (shop.addressLine2).isNotEmpty) {
       _address2Controller.text = shop.addressLine2;
+    }
+    if (_phoneController.text.isEmpty && (shop.phoneNumber).isNotEmpty) {
       _phoneController.text = shop.phoneNumber;
+    }
+    if (_upiController.text.isEmpty && (shop.upiId).isNotEmpty) {
       _upiController.text = shop.upiId;
+    }
+    if (_footerController.text.isEmpty && (shop.footerText).isNotEmpty) {
       _footerController.text = shop.footerText;
+    }
+
+    // Payment numbers: use null-safe access and avoid overwriting user edits
+    if (_mvolaController.text.isEmpty) {
       _mvolaController.text = shop.mvolaNumber;
+    }
+    if (_orangeController.text.isEmpty) {
       _orangeController.text = shop.orangeMoneyNumber;
+    }
+    if (_airtelController.text.isEmpty) {
       _airtelController.text = shop.airtelMoneyNumber;
     }
   }
@@ -168,36 +187,73 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
-                    Text('Mobile Money Numbers',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                          color: AppTheme.primaryColor.withOpacity(0.8),
-                        )),
-                    const SizedBox(height: 8),
-                    const InputLabel(text: 'MVola'),
-                    _buildTextField(
-                      controller: _mvolaController,
-                      hint: '0383664786',
-                      keyboardType: TextInputType.phone,
-                      validator: AppValidators.required('Required'),
-                    ),
                     const SizedBox(height: 12),
-                    const InputLabel(text: 'Orange Money'),
-                    _buildTextField(
-                      controller: _orangeController,
-                      hint: '0372177785',
-                      keyboardType: TextInputType.phone,
-                      validator: AppValidators.required('Required'),
-                    ),
-                    const SizedBox(height: 12),
-                    const InputLabel(text: 'Airtel Money'),
-                    _buildTextField(
-                      controller: _airtelController,
-                      hint: '0332177785',
-                      keyboardType: TextInputType.phone,
-                      validator: AppValidators.required('Required'),
+                    Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Payment Settings',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: AppTheme.primaryColor)),
+                              subtitle: const Text(
+                                  'Mobile money numbers used during checkout'),
+                            ),
+                            const Divider(),
+                            // MVola
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: TextFormField(
+                                controller: _mvolaController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.phone_android),
+                                  labelText: 'MVola Number',
+                                  hintText: '0383664786',
+                                ),
+                                validator: AppValidators.required('Required'),
+                              ),
+                            ),
+                            // Orange
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: TextFormField(
+                                controller: _orangeController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.phone_android),
+                                  labelText: 'Orange Money Number',
+                                  hintText: '0372177785',
+                                ),
+                                validator: AppValidators.required('Required'),
+                              ),
+                            ),
+                            // Airtel
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: TextFormField(
+                                controller: _airtelController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.phone_android),
+                                  labelText: 'Airtel Money Number',
+                                  hintText: '0332177785',
+                                ),
+                                validator: AppValidators.required('Required'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     // const SizedBox(height: 15),
                     // const InputLabel(text: 'UPI ID'),
