@@ -288,9 +288,9 @@ class _ProductListPageState extends State<ProductListPage> {
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 12),
-                  Text(
+                  const Text(
                     'Delete Product',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: Color(0xFFD32F2F),
                         fontWeight: FontWeight.bold,
                         fontSize: 18),

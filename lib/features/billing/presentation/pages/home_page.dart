@@ -70,117 +70,134 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showManualProductPopup(BuildContext context) {
-  // Ity no fakana ny lisitra avy amin'ny ProductBloc
-  final allProducts = context.read<ProductBloc>().state.products;
-  // Ity no hitahiry ireo entana voafidy (Selected)
-  List<Product> selectedProducts = [];
-  String searchQuery = "";
+    // Ity no fakana ny lisitra avy amin'ny ProductBloc
+    final allProducts = context.read<ProductBloc>().state.products;
+    // Ity no hitahiry ireo entana voafidy (Selected)
+    List<Product> selectedProducts = [];
+    String searchQuery = "";
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // Mba hahafahany mameno ecran
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setPopupState) {
-          // Sivana ho an'ny Search Bar
-          final filteredProducts = allProducts
-              .where((p) => p.name.toLowerCase().contains(searchQuery.toLowerCase()))
-              .toList();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Mba hahafahany mameno ecran
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setPopupState) {
+            // Sivana ho an'ny Search Bar
+            final filteredProducts = allProducts
+                .where((p) =>
+                    p.name.toLowerCase().contains(searchQuery.toLowerCase()))
+                .toList();
 
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.9, // 90% n'ny ecran
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // --- HEADER: ICON CLOSE SY BOUTON ADD ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 30),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const Text("Select Products", 
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    IconButton(
-                      icon: const Icon(Icons.check_circle, color: Colors.green, size: 35),
-                      onPressed: selectedProducts.isEmpty ? null : () {
-                        // Mampiditra ny entana rehetra voafidy ao amin'ny BillingBloc
-                        for (var product in selectedProducts) {
-                            context.read<BillingBloc>().add(AddProductToCartEvent(product));
-                        }
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // --- SEARCH BAR ---
-                TextField(
-                  decoration: const InputDecoration(
-                    hintText: "Search product name...",
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+            return Container(
+              height:
+                  MediaQuery.of(context).size.height * 0.9, // 90% n'ny ecran
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // --- HEADER: ICON CLOSE SY BOUTON ADD ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 30),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const Text("Select Products",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: const Icon(Icons.check_circle,
+                            color: Colors.green, size: 35),
+                        onPressed: selectedProducts.isEmpty
+                            ? null
+                            : () {
+                                // Mampiditra ny entana rehetra voafidy ao amin'ny BillingBloc
+                                for (var product in selectedProducts) {
+                                  context
+                                      .read<BillingBloc>()
+                                      .add(AddProductToCartEvent(product));
+                                }
+                                Navigator.pop(context);
+                              },
+                      ),
+                    ],
                   ),
-                  onChanged: (value) {
-                    setPopupState(() => searchQuery = value);
-                  },
-                ),
-                const SizedBox(height: 15),
-                // --- LIST OF PRODUCTS ---
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = filteredProducts[index];
-                      final isSelected = selectedProducts.contains(product);
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF6C63FF).withOpacity(0.1) : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF6C63FF) : Colors.grey.shade300,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          title: Text(product.name, 
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? const Color(0xFF6C63FF) : Colors.black,
-                            )),
-                          subtitle: Text("${product.price} MGA"),
-                          trailing: isSelected 
-                            ? const Icon(Icons.check_box, color: Color(0xFF6C63FF))
-                            : const Icon(Icons.check_box_outline_blank),
-                          onTap: () {
-                            setPopupState(() {
-                              if (isSelected) {
-                                selectedProducts.remove(product);
-                              } else {
-                                selectedProducts.add(product);
-                              }
-                            });
-                          },
-                        ),
-                      );
+                  const SizedBox(height: 10),
+                  // --- SEARCH BAR ---
+                  TextField(
+                    decoration: const InputDecoration(
+                      hintText: "Search product name...",
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      setPopupState(() => searchQuery = value);
                     },
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+                  const SizedBox(height: 15),
+                  // --- LIST OF PRODUCTS ---
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+                        final isSelected = selectedProducts.contains(product);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF6C63FF).withOpacity(0.1)
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF6C63FF)
+                                  : Colors.grey.shade300,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ListTile(
+                            title: Text(product.name,
+                                style: TextStyle(
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? const Color(0xFF6C63FF)
+                                      : Colors.black,
+                                )),
+                            subtitle: Text("${product.price} MGA"),
+                            trailing: isSelected
+                                ? const Icon(Icons.check_box,
+                                    color: Color(0xFF6C63FF))
+                                : const Icon(Icons.check_box_outline_blank),
+                            onTap: () {
+                              setPopupState(() {
+                                if (isSelected) {
+                                  selectedProducts.remove(product);
+                                } else {
+                                  selectedProducts.add(product);
+                                }
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -462,7 +479,8 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.w600)),
                         IconButton(
-                          icon: Icon(Icons.add_shopping_cart, color: Color(0xFF6C63FF)),
+                          icon: const Icon(Icons.add_shopping_cart,
+                              color: Color(0xFF6C63FF)),
                           onPressed: () => _showManualProductPopup(context),
                         ),
                         Text('$totalItems items total',
@@ -589,7 +607,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                    '${formatMGA(item.product.price)} Ar',
+                  '${formatMGA(item.product.price)} Ar',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -613,12 +631,13 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     if (item.quantity > 1) {
                       context.read<BillingBloc>().add(
-                        UpdateQuantityEvent(item.product.id, item.quantity - 1),
-                      );
+                            UpdateQuantityEvent(
+                                item.product.id, item.quantity - 1),
+                          );
                     } else {
                       context.read<BillingBloc>().add(
-                        RemoveProductFromCartEvent(item.product.id),
-                      );
+                            RemoveProductFromCartEvent(item.product.id),
+                          );
                     }
                   },
                 ),
@@ -634,8 +653,9 @@ class _HomePageState extends State<HomePage> {
                   icon: Icons.add,
                   onPressed: () {
                     context.read<BillingBloc>().add(
-                      UpdateQuantityEvent(item.product.id, item.quantity + 1),
-                    );
+                          UpdateQuantityEvent(
+                              item.product.id, item.quantity + 1),
+                        );
                   },
                 ),
               ],

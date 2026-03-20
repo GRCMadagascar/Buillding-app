@@ -8,7 +8,6 @@ import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
-import '../../../../core/utils/currency_formatter.dart';
 import 'package:flutter/services.dart';
 
 class EditProductPage extends StatefulWidget {
@@ -73,7 +72,8 @@ class _EditProductPageState extends State<EditProductPage> {
                 children: [
                   // Barcode display with edit action
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
                     margin: const EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withValues(alpha: 0.04),
@@ -96,7 +96,7 @@ class _EditProductPageState extends State<EditProductPage> {
                                       color: AppTheme.primaryColor
                                           .withValues(alpha: 0.7))),
                               const SizedBox(height: 4),
-                Text(_barcode,
+                              Text(_barcode,
                                   style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -124,7 +124,8 @@ class _EditProductPageState extends State<EditProductPage> {
                                         onPressed: () => Navigator.pop(ctx),
                                         child: const Text('Cancel')),
                                     ElevatedButton(
-                                        onPressed: () => Navigator.pop(ctx, edited),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, edited),
                                         child: const Text('Save')),
                                   ],
                                 );
@@ -160,8 +161,11 @@ class _EditProductPageState extends State<EditProductPage> {
                       Expanded(
                         child: TextFormField(
                           initialValue: _price.toStringAsFixed(0),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: false),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           textAlign: TextAlign.left,
                           decoration: const InputDecoration(
                             hintText: '0',
@@ -173,12 +177,14 @@ class _EditProductPageState extends State<EditProductPage> {
                       ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Ariary', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text('Ariary',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),

@@ -116,7 +116,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               Container(
                                 width: 110,
                                 height: 110,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
@@ -331,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: isDark ? 'Enabled' : 'Disabled',
                     trailingWidget: Switch(
                       value: isDark,
-                      activeColor: const Color(0xFF6C63FF),
+                      activeThumbColor: const Color(0xFF6C63FF),
                       onChanged: (v) {
                         context.read<ThemeCubit>().setThemeMode(v ? ThemeMode.dark : ThemeMode.light);
                       },
@@ -344,7 +344,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
           const SizedBox(height: 20),
-          Center(
+          const Center(
             child: Text(
               "Edited by | Ranto Nandrianina 2026",
               style: TextStyle(
@@ -406,46 +406,20 @@ class _SettingsPageState extends State<SettingsPage> {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: AppTheme.primaryColor, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14)),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(subtitle,
-                        style:
-                            TextStyle(fontSize: 12, color: Colors.grey[500])),
-                  ],
-                  if (subtitleWidget != null) ...[
-                    const SizedBox(height: 4),
-                    subtitleWidget,
-                  ]
-                ],
-              ),
-            ),
-            if (trailingWidget != null)
-              trailingWidget
-            else if (trailingIcon != null)
-              Icon(trailingIcon, color: Colors.grey[300]),
-          ],
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppTheme.primaryColor, size: 20),
         ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: subtitleWidget ?? (subtitle != null ? Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])) : null),
+        trailing: trailingWidget ?? (trailingIcon != null ? Icon(trailingIcon, color: Colors.grey[400]) : null),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../shop/presentation/bloc/shop_bloc.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,6 +15,9 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  StreamSubscription? _shopSub;
+  Timer? _fallbackTimer;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -25,16 +30,50 @@ class _SplashScreenState extends State<SplashScreen>
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
-    // After a short delay, navigate to the home route '/' using GoRouter
-    Timer(const Duration(seconds: 2), () {
-      if (mounted) context.go('/');
+    // Wait for the ShopBloc to load shop data (or error) before navigating.
+    // This surfaces any initialization issues (e.g., Hive / generated adapter errors)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final shopBloc = context.read<ShopBloc>();
+
+        // If already loaded, navigate immediately
+        if (shopBloc.state is ShopLoaded) {
+          _navigateHome();
+          return;
+        }
+
+        // Listen for the first loaded or error state
+        _shopSub = shopBloc.stream.listen((state) {
+          if (state is ShopLoaded || state is ShopError) {
+            _navigateHome();
+          }
+        });
+
+        // Fallback: navigate after 4 seconds even if ShopBloc didn't emit
+        _fallbackTimer = Timer(const Duration(seconds: 4), () {
+          _navigateHome();
+        });
+      } catch (e) {
+        // If reading the bloc fails, fallback to navigate after a short delay
+        _fallbackTimer = Timer(const Duration(seconds: 2), () {
+          _navigateHome();
+        });
+      }
     });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _shopSub?.cancel();
+    _fallbackTimer?.cancel();
     super.dispose();
+  }
+
+  void _navigateHome() {
+    if (_navigated) return;
+    _navigated = true;
+    if (mounted) context.go('/');
   }
 
   @override
@@ -73,8 +112,8 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
 
                 // Bottom area: copyright
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     '© ranto nandrianina 2026',
                     style: TextStyle(

@@ -27,7 +27,7 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
         (failure) => emit(ShopError(failure.message)),
         (shop) => emit(ShopLoaded(shop)),
       );
-    } catch (e, st) {
+    } catch (e) {
       // Catch unexpected exceptions and emit an error state so the UI can react
       emit(ShopError('Failed to load shop: ${e.toString()}'));
     }
@@ -46,7 +46,7 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
           add(LoadShopEvent());
         },
       );
-    } catch (e, st) {
+    } catch (e) {
       emit(ShopError('Failed to update shop: ${e.toString()}'));
     }
   }
