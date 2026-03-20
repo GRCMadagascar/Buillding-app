@@ -178,7 +178,7 @@ class PrinterHelper {
     // Total (Align Right)
     bytes += EscPos.alignRight;
     bytes += EscPos.boldOn;
-    bytes += _textToBytes('TOTAL: $total');
+    bytes += _textToBytes('TOTAL: $total Ar');
     bytes += EscPos.lineFeed;
     bytes += EscPos.boldOff;
     bytes += EscPos.lineFeed;

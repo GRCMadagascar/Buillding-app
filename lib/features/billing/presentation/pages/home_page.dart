@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Mba hahafahany mameno ecran
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -419,19 +419,23 @@ class _HomePageState extends State<HomePage> {
           border: Border(
             top: (alignment == Alignment.topLeft ||
                     alignment == Alignment.topRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                ? const BorderSide(
+                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
                 : BorderSide.none,
             bottom: (alignment == Alignment.bottomLeft ||
                     alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                ? const BorderSide(
+                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
                 : BorderSide.none,
             left: (alignment == Alignment.topLeft ||
                     alignment == Alignment.bottomLeft)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                ? const BorderSide(
+                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
                 : BorderSide.none,
             right: (alignment == Alignment.topRight ||
                     alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
+                ? const BorderSide(
+                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
                 : BorderSide.none,
           ),
         ),

@@ -12,7 +12,7 @@ class ScannerPage extends StatefulWidget {
 }
 
 class _ScannerPageState extends State<ScannerPage>
-  with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     returnImage: false,
@@ -112,101 +112,102 @@ class _ScannerPageState extends State<ScannerPage>
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFF6C63FF),
-    body: _permissionDenied
-        ? SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.warning, size: 64, color: Colors.white),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Camera permission is required to scan barcodes.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () async {
-                        // Open app settings so the user can grant permission
-                        await openAppSettings();
-                      },
-                      child: const Text('Open App Settings'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => _initCamera(),
-                      child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        : Stack(
-            fit: StackFit.expand,
-            children: [
-              // Camera preview
-              if (_hasCameraPermission)
-                MobileScanner(
-                  controller: controller,
-                  onDetect: _onDetect,
-                ),
-
-              // Overlay: logo + copyright (kept from original design)
-              // --- LOGO SY ANARANA APP EO AFOWOANY ---
-              Center(
-                child: FadeTransition(
-                  opacity: _animation,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF6C63FF),
+      body: _permissionDenied
+          ? SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        'assets/grc_logo.png',
-                        height: 120,
-                      ),
-                      const SizedBox(height: 20),
+                      const Icon(Icons.warning, size: 64, color: Colors.white),
+                      const SizedBox(height: 16),
                       const Text(
-                        "GRC ",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 2,
-                        ),
+                        'Camera permission is required to scan barcodes.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Open app settings so the user can grant permission
+                          await openAppSettings();
+                        },
+                        child: const Text('Open App Settings'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => _initCamera(),
+                        child: const Text('Retry',
+                            style: TextStyle(color: Colors.white)),
                       ),
                     ],
                   ),
                 ),
               ),
+            )
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                // Camera preview
+                if (_hasCameraPermission)
+                  MobileScanner(
+                    controller: controller,
+                    onDetect: _onDetect,
+                  ),
 
-              // --- COPYRIGHT EO AMBANY INDRINDRA ---
-              Positioned(
-                bottom: 30,
-                left: 0,
-                right: 0,
-                child: FadeTransition(
-                  opacity: _animation,
-                  child: const Text(
-                    "©ranto nandrianina 2026",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w300,
+                // Overlay: logo + copyright (kept from original design)
+                // --- LOGO SY ANARANA APP EO AFOWOANY ---
+                Center(
+                  child: FadeTransition(
+                    opacity: _animation,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/grc_logo.png',
+                          height: 120,
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "GRC POS SYSTEM",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-  );
-}
+
+                // --- COPYRIGHT EO AMBANY INDRINDRA ---
+                Positioned(
+                  bottom: 30,
+                  left: 0,
+                  right: 0,
+                  child: FadeTransition(
+                    opacity: _animation,
+                    child: const Text(
+                      "©ranto nandrianina 2026",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
 
   Widget _corner(int index) {
     return Container(

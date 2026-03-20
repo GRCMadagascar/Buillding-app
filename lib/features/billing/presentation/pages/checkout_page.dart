@@ -9,6 +9,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../bloc/billing_bloc.dart';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:billing_app/core/utils/snackbar_helper.dart' as sbh;
 
 enum Operator { mvola, orange, airtel }
@@ -59,11 +60,14 @@ class _CheckoutPageState extends State<CheckoutPage>
   String _operatorCode() {
     switch (_selectedOperator) {
       case Operator.mvola:
-        return '*111*';
+        // Mvola transfer prefix
+        return '*111*1*2*';
       case Operator.orange:
-        return '*130*';
+        // Orange Money transfer prefix
+        return '*144*';
       case Operator.airtel:
-        return '*182*';
+        // Airtel Money transfer prefix
+        return '*333*';
       default:
         return '*123*';
     }
@@ -72,9 +76,50 @@ class _CheckoutPageState extends State<CheckoutPage>
   String _buildQrData(String phone, double amount) {
     if (phone.isEmpty || _selectedOperator == null) return '';
     final code = _operatorCode();
-    final ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+    String ussd;
+    switch (_selectedOperator) {
+      case Operator.mvola:
+        // *111*1*2*RECIPIENT_NUMBER*AMOUNT*#
+        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+        break;
+      case Operator.orange:
+        // *144*AMOUNT*RECIPIENT_NUMBER*#
+        ussd = '${code}${amount.toStringAsFixed(0)}*${phone}#';
+        break;
+      case Operator.airtel:
+        // *333*RECIPIENT_NUMBER*AMOUNT*# (assumed similar to Mvola)
+        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+        break;
+      default:
+        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+    }
+
     final encoded = ussd.replaceAll('#', '%23');
     return 'tel:$encoded';
+  }
+
+  Future<void> _launchUSSD(ShopState shopState, double amount) async {
+    final phone = _operatorPhone(shopState);
+    if (phone.isEmpty || _selectedOperator == null) {
+      sbh.showAppSnackBar('Operator phone not configured', isError: true);
+      return;
+    }
+
+    final uriString = _buildQrData(phone, amount);
+    if (uriString.isEmpty) {
+      sbh.showAppSnackBar('Unable to build USSD', isError: true);
+      return;
+    }
+
+    final uri = Uri.parse(uriString);
+    try {
+      if (!await launchUrl(uri)) {
+        sbh.showAppSnackBar('Could not open dialer', isError: true);
+      }
+    } catch (e) {
+      sbh.showAppSnackBar('Failed to launch dialer: ${e.toString()}',
+          isError: true);
+    }
   }
 
   @override
@@ -409,7 +454,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                             12),
                                                     border: Border.all(
                                                         color: _operatorColor(),
-                                                        width: 4),
+                                                        width: 6),
                                                   ),
                                                   child: PrettyQrView.data(
                                                     data: _buildQrData(
@@ -420,13 +465,11 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                   ),
                                                 ),
                                                 const SizedBox(height: 8),
-                                                // Pay button triggers USSD generation
+                                                // Pay button triggers USSD dialing
                                                 PrimaryButton(
-                                                  onPressed: () =>
-                                                      _onPayPressed(
-                                                          shopState,
-                                                          billingState
-                                                              .totalAmount),
+                                                  onPressed: () => _launchUSSD(
+                                                      shopState,
+                                                      billingState.totalAmount),
                                                   label: 'Pay',
                                                   icon: Icons.payment,
                                                 ),
@@ -443,7 +486,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                     const Text(
                                       'GRAND TOTAL',
                                       style: TextStyle(
-                                        fontSize: 19,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF0F172A),
                                         letterSpacing: 1.2,

@@ -50,7 +50,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = Colors.grey[100]!;
+    final borderColor = Theme.of(context).dividerColor;
 
     return Scaffold(
       appBar: AppBar(
@@ -171,7 +171,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     final product = filteredProducts[index];
                     return Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: borderColor),
                         boxShadow: const [

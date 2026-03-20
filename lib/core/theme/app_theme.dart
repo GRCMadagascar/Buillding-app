@@ -97,7 +97,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: const Color(0xFF0B0B0E),
+      // Use a deep background for dark mode to avoid white flashes
+      scaffoldBackgroundColor: const Color(0xFF121212),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.transparent,
       ),
@@ -125,7 +126,8 @@ class AppTheme {
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: const Color(0xFF111827),
+        // Use the same deep dark card color so cards match the scaffold in dark mode
+        color: const Color(0xFF121212),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
