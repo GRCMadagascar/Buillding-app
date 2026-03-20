@@ -34,10 +34,11 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller = TextEditingController();
     _address2Controller = TextEditingController();
     _phoneController = TextEditingController();
+    _upiController = TextEditingController();
     _footerController = TextEditingController();
-  _mvolaController = TextEditingController(text: '0383664786');
-  _orangeController = TextEditingController(text: '0372177785');
-  _airtelController = TextEditingController(text: '0332177785');
+    _mvolaController = TextEditingController(text: '0383664786');
+    _orangeController = TextEditingController(text: '0372177785');
+    _airtelController = TextEditingController(text: '0332177785');
 
     // Load shop data
     context.read<ShopBloc>().add(LoadShopEvent());
