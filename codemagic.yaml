@@ -16,7 +16,7 @@ workflows:
       - name: Generate code (build_runner)
         script: |
           set -e
-          echo "Running build_runner to regenerate .g.dart files..."
+          flutter pub get  # Ataovy azo antoka fa mahita ny packages rehetra izy
           flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Android APK

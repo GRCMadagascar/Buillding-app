@@ -25,39 +25,45 @@ class ShopModel extends Shop {
   @override
   @HiveField(5)
   final String footerText;
-  @override
   @HiveField(6)
   @JsonKey(name: 'mvolaNumber')
-  final String mvolaNumber;
+  final String? _mvolaNumber;
   @override
+  String get mvolaNumber => _mvolaNumber ?? '';
   @HiveField(7)
   @JsonKey(name: 'orangeMoneyNumber')
-  final String orangeMoneyNumber;
+  final String? _orangeMoneyNumber;
   @override
+  String get orangeMoneyNumber => _orangeMoneyNumber ?? '';
   @HiveField(8)
   @JsonKey(name: 'airtelMoneyNumber')
-  final String airtelMoneyNumber;
+  final String? _airtelMoneyNumber;
+  @override
+  String get airtelMoneyNumber => _airtelMoneyNumber ?? '';
 
   const ShopModel({
-    required this.name,
-    required this.addressLine1,
-    required this.addressLine2,
-    required this.phoneNumber,
-    required this.upiId,
-    required this.footerText,
-    required this.mvolaNumber,
-    required this.orangeMoneyNumber,
-    required this.airtelMoneyNumber,
-  }) : super(
+    this.name = '',
+    this.addressLine1 = '',
+    this.addressLine2 = '',
+    this.phoneNumber = '',
+    this.upiId = '',
+    this.footerText = '',
+    String? mvolaNumber,
+    String? orangeMoneyNumber,
+    String? airtelMoneyNumber,
+  })  : _mvolaNumber = mvolaNumber,
+        _orangeMoneyNumber = orangeMoneyNumber,
+        _airtelMoneyNumber = airtelMoneyNumber,
+        super(
           name: name,
           addressLine1: addressLine1,
           addressLine2: addressLine2,
           phoneNumber: phoneNumber,
           upiId: upiId,
           footerText: footerText,
-          mvolaNumber: mvolaNumber,
-          orangeMoneyNumber: orangeMoneyNumber,
-          airtelMoneyNumber: airtelMoneyNumber,
+          mvolaNumber: mvolaNumber ?? '',
+          orangeMoneyNumber: orangeMoneyNumber ?? '',
+          airtelMoneyNumber: airtelMoneyNumber ?? '',
         );
 
   factory ShopModel.fromEntity(Shop shop) {
