@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color.fromARGB(255, 216, 53, 3);
+  static const Color primaryColor = Color.fromARGB(255, 138, 3, 216);
   static const Color secondaryColor = Color.fromARGB(255, 114, 3, 218);
   static const Color backgroundColor = Color(0xFFF2F2F7);
   static const Color surfaceColor = Colors.white;

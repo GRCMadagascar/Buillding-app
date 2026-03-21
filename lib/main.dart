@@ -52,6 +52,7 @@ class MyApp extends StatelessWidget {
           return BlocBuilder<LanguageCubit, LanguageState>(
             builder: (context, lang) {
               return MaterialApp.router(
+                // Use locale from LanguageCubit (LanguageCubit defaults to English)
                 locale: lang.locale,
                 localizationsDelegates: const [
                   AppLocalizations.delegate,
@@ -64,7 +65,7 @@ class MyApp extends StatelessWidget {
                   Locale('fr'),
                   Locale('mg'),
                 ],
-                title: 'Mobile POS',
+                title: 'GRC POS SYSTEM',
                 // Keep the base themes from AppTheme but inject our global SnackBar style
                 theme: AppTheme.lightTheme.copyWith(
                   snackBarTheme: const SnackBarThemeData(

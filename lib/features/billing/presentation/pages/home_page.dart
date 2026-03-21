@@ -11,6 +11,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
+import '../../../../core/locale/language_cubit.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,8 +107,8 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.close, size: 30),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const Text("Select Products",
-                          style: TextStyle(
+                      const Text('Select Products',
+                          style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.check_circle,
@@ -129,10 +130,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   // --- SEARCH BAR ---
                   TextField(
-                    decoration: const InputDecoration(
-                      hintText: "Search product name...",
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: 'Search product name...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setPopupState(() => searchQuery = value);
@@ -201,58 +202,60 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocListener<BillingBloc, BillingState>(
-        listenWhen: (previous, current) =>
-            previous.error != current.error && current.error != null,
-        listener: (context, state) {
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
+    return BlocBuilder<LanguageCubit, LanguageState>(builder: (context, lang) {
+      return Scaffold(
+        body: BlocListener<BillingBloc, BillingState>(
+          listenWhen: (previous, current) =>
+              previous.error != current.error && current.error != null,
+          listener: (context, state) {
+            if (state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error!),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+          child: Stack(
+            children: [
+              // SCANNER VIEW (TOP 50%)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: _buildScannerSection(),
               ),
-            );
-          }
-        },
-        child: Stack(
-          children: [
-            // SCANNER VIEW (TOP 50%)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: _buildScannerSection(),
-            ),
 
-            // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
-            Positioned(
-              top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildBottomPanel(),
-            ),
-          ],
+              // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
+              Positioned(
+                top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _buildBottomPanel(),
+              ),
+            ],
+          ),
         ),
-      ),
-      bottomSheet:
-          BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
-        return PrimaryButton(
-          onPressed: state.cartItems.isEmpty
-              ? null
-              : () async {
-                  _scannerController.stop();
-                  await context.push('/checkout');
-                  if (_isCameraOn && mounted) _scannerController.start();
-                },
-          icon: Icons.payment,
-          label: 'Review Order',
-        );
-      }),
-    );
+        bottomSheet:
+            BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
+          return PrimaryButton(
+            onPressed: state.cartItems.isEmpty
+                ? null
+                : () async {
+                    _scannerController.stop();
+                    await context.push('/checkout');
+                    if (_isCameraOn && mounted) _scannerController.start();
+                  },
+            icon: Icons.payment,
+            label: 'Review Order',
+          );
+        }),
+      );
+    });
   }
 
   Widget _buildScannerSection() {
@@ -357,7 +360,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           const Text(
             'Camera is turned off',
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -413,8 +416,8 @@ class _HomePageState extends State<HomePage> {
     return Align(
       alignment: alignment,
       child: Container(
-        width: 27,
-        height: 27,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
           border: Border(
             top: (alignment == Alignment.topLeft ||
@@ -496,7 +499,7 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('TOTAL EN ARIARY',
+                        const Text('TOTAL IN ARIARY',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -507,7 +510,7 @@ class _HomePageState extends State<HomePage> {
                           style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: Colors.white),
+                              color: Color.fromARGB(255, 179, 0, 255)),
                         ),
                       ],
                     ),

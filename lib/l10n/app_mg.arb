@@ -20,4 +20,16 @@
   "darkMode": "Maody maizina",
   "enabled": "Alefa",
   "disabled": "Vonja"
+   ,
+   "selectProductsTitle": "Misafidiana vokatra",
+   "searchProductNameHint": "Mitadiava vokatra...",
+   "reviewOrder": "Jereo ny baikon'ny mpanjifa",
+   "cameraOffTitle": "Tapaka ny fakantsary",
+   "cameraOffInstructions": "Alefaso ny fakantsary mba hanombohana mamantatra ny barcode sy ny entana ho azy.",
+   "turnOnCameraButton": "Alefaso ny fakantsary",
+   "scannedItems": "Entana voaskena",
+   "scannedItemsHelp": "Hiseho eto ireo entana voaskena rehefa manao skanina ianao eo ambony fakantsary."
+,
+"totalInAriary": "TOTAL EN ARIARY",
+"listIsEmpty": "Banga ny lisitra"
 }

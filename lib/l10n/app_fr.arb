@@ -20,4 +20,16 @@
   "darkMode": "Mode sombre",
   "enabled": "Activé",
   "disabled": "Désactivé"
+    ,
+    "selectProductsTitle": "Sélectionner les produits",
+    "searchProductNameHint": "Rechercher le nom du produit...",
+    "reviewOrder": "Vérifier la commande",
+    "cameraOffTitle": "La caméra est désactivée",
+    "cameraOffInstructions": "Activez votre caméra pour commencer à scanner les codes-barres et les articles automatiquement.",
+    "turnOnCameraButton": "Activer la caméra",
+    "scannedItems": "Articles scannés",
+    "scannedItemsHelp": "Les articles scannés apparaîtront ici au fur et à mesure que vous les scannez avec la caméra ci-dessus."
+    ,
+    "totalInAriary": "TOTAL EN ARIARY",
+    "listIsEmpty": "La liste est vide"
 }

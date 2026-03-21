@@ -20,4 +20,16 @@
   "darkMode": "Dark Mode",
   "enabled": "Enabled",
   "disabled": "Disabled"
+  ,
+  "selectProductsTitle": "Select Products",
+  "searchProductNameHint": "Search product name...",
+  "reviewOrder": "Review Order",
+  "cameraOffTitle": "Camera is turned off",
+  "cameraOffInstructions": "Turn on your camera to start scanning barcodes and items automatically.",
+  "turnOnCameraButton": "Turn on Camera",
+  "scannedItems": "Scanned Items",
+  "scannedItemsHelp": "Scanned items will appear here as you scan them with the camera above."
+  ,
+  "totalInAriary": "TOTAL IN ARIARY",
+  "listIsEmpty": "List is empty"
 }

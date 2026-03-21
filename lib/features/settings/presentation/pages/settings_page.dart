@@ -71,38 +71,32 @@ class _SettingsPageState extends State<SettingsPage> {
                 onPressed: () => context.pop(),
               ),
               actions: [
-                // Language switcher
-                BlocBuilder<LanguageCubit, LanguageState>(
-                    builder: (context, lang) {
-                  return PopupMenuButton<String>(
-                    tooltip: AppLocalizations.of(context)!.language,
-                    icon: const Icon(Icons.language),
-                    onSelected: (code) {
-                      // Persist and update global locale via LanguageCubit at app root
+                PopupMenuButton<String>(
+                  tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                  icon: const Icon(Icons.language),
+                  onSelected: (code) {
+                    try {
                       context.read<LanguageCubit>().setLanguageCode(code);
-                    },
-                    itemBuilder: (ctx) => [
-                      PopupMenuItem(
-                        value: 'mg',
-                        child: Row(children: [
-                          Text(AppLocalizations.of(context)!.malagasyLabel)
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        value: 'fr',
-                        child: Row(children: [
-                          Text(AppLocalizations.of(context)!.frenchLabel)
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        value: 'en',
-                        child: Row(children: [
-                          Text(AppLocalizations.of(context)!.englishLabel)
-                        ]),
-                      ),
-                    ],
-                  );
-                })
+                    } catch (_) {}
+                  },
+                  itemBuilder: (ctx) => [
+                    PopupMenuItem(
+                      value: 'mg',
+                      child: Text(AppLocalizations.of(ctx)?.malagasyLabel ??
+                          'Malagasy (MGA / Ar)'),
+                    ),
+                    PopupMenuItem(
+                      value: 'fr',
+                      child: Text(AppLocalizations.of(ctx)?.frenchLabel ??
+                          'Français (EUR / €)'),
+                    ),
+                    PopupMenuItem(
+                      value: 'en',
+                      child: Text(AppLocalizations.of(ctx)?.englishLabel ??
+                          'English (USD / \$)'),
+                    ),
+                  ],
+                ),
               ],
             ),
             body: SingleChildScrollView(
@@ -125,45 +119,20 @@ class _SettingsPageState extends State<SettingsPage> {
                               decoration: BoxDecoration(
                                 color: Theme.of(context).cardColor,
                                 borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
                               ),
-                            ),
-                          ),
-
-                          // Cover image with rounded corners and border
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            right: 8,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                // subtle thin white border instead of violet
-                                border: Border.all(
-                                    color: Colors.white24, width: 0.5),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: (_coverImage != null)
-                                    ? Image.file(
-                                        File(_coverImage!.path),
-                                        height: 152,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.asset(
-                                        'assets/Fond.jpg',
-                                        height: 152,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      ),
-                              ),
+                              child: _coverImage != null
+                                  ? Image.file(
+                                      File(_coverImage!.path),
+                                      height: 152,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      'assets/Fond.jpg',
+                                      height: 152,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
 

@@ -7,6 +7,8 @@ import '../../domain/entities/shop.dart';
 import '../../../../core/data/hive_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../bloc/shop_bloc.dart';
@@ -18,6 +20,43 @@ class ShopDetailsPage extends StatefulWidget {
 
   @override
   State<ShopDetailsPage> createState() => _ShopDetailsPageState();
+}
+
+// Top-level processor used with compute to avoid blocking the UI isolate.
+// Takes the original image bytes, decodes and processes pixels, and returns
+// encoded PNG bytes with transparent background and black logo pixels.
+Uint8List _processLogoBytes(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return bytes;
+
+  final working = img.Image.from(decoded);
+
+  const int bgThreshold = 240;
+  const double luminanceThreshold = 128.0;
+
+  for (int y = 0; y < working.height; y++) {
+    for (int x = 0; x < working.width; x++) {
+      final pixel = working.getPixel(x, y);
+      final int r = pixel.r as int;
+      final int g = pixel.g as int;
+      final int b = pixel.b as int;
+
+      if (r >= bgThreshold && g >= bgThreshold && b >= bgThreshold) {
+        working.setPixelRgba(x, y, 0, 0, 0, 0);
+        continue;
+      }
+
+      final luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      if (luminance < luminanceThreshold) {
+        working.setPixelRgba(x, y, 0, 0, 0, 255);
+      } else {
+        working.setPixelRgba(x, y, 0, 0, 0, 0);
+      }
+    }
+  }
+
+  final png = img.encodePng(working, level: 1);
+  return Uint8List.fromList(png);
 }
 
 class _ShopDetailsPageState extends State<ShopDetailsPage> {
@@ -38,6 +77,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _orangeController;
   late TextEditingController _airtelController;
   String? _logoPath;
+  bool _isProcessingLogo = false;
 
   @override
   void initState() {
@@ -165,52 +205,21 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   Future<String> _processAndSaveLogo(String originalPath) async {
     final originalFile = File(originalPath);
     if (!await originalFile.exists()) return originalPath;
-
     final bytes = await originalFile.readAsBytes();
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) return originalPath;
 
-    // Create a copy we can modify in RGBA
-    final working = img.Image.from(decoded);
-
-    // Thresholds
-    const int bgThreshold = 240; // near-white background threshold
-    const double luminanceThreshold = 128.0;
-
-    for (int y = 0; y < working.height; y++) {
-      for (int x = 0; x < working.width; x++) {
-        final pixel = working.getPixel(x, y);
-        final int r = pixel.r as int;
-        final int g = pixel.g as int;
-        final int b = pixel.b as int;
-
-        // If nearly white, make transparent
-        if (r >= bgThreshold && g >= bgThreshold && b >= bgThreshold) {
-          working.setPixelRgba(x, y, 0, 0, 0, 0);
-          continue;
-        }
-
-        // Compute luminance
-        final luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-
-        // For high-contrast logo for thermal printers, set dark pixels to opaque black
-        // and light pixels to transparent (so background stays transparent)
-        if (luminance < luminanceThreshold) {
-          // black pixel, fully opaque
-          working.setPixelRgba(x, y, 0, 0, 0, 255);
-        } else {
-          // light pixel: make transparent
-          working.setPixelRgba(x, y, 0, 0, 0, 0);
-        }
-      }
+    // Offload CPU-heavy pixel processing to a background isolate using compute
+    Uint8List pngBytes;
+    try {
+      pngBytes = await compute(_processLogoBytes, bytes);
+    } catch (e) {
+      // If compute fails for any reason, fallback to saving original bytes
+      pngBytes = bytes;
     }
-
-    final png = img.encodePng(working, level: 1);
 
     final dir = await getApplicationDocumentsDirectory();
     final savePath = '${dir.path}/shop_logo_processed.png';
     final outFile = File(savePath);
-    await outFile.writeAsBytes(png, flush: true);
+    await outFile.writeAsBytes(pngBytes, flush: true);
 
     return savePath;
   }
@@ -276,8 +285,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
               return const Center(child: CircularProgressIndicator());
             }
 
+            final bottomPad = MediaQuery.of(context).viewInsets.bottom + 96;
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -340,31 +350,49 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                                 child: const Icon(Icons.image, size: 36),
                               ),
                         const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final picker = ImagePicker();
-                            final XFile? file = await picker.pickImage(
-                                source: ImageSource.gallery, imageQuality: 80);
-                            if (file != null) {
-                              // Process the image: remove near-white background and convert to high-contrast black-only PNG
-                              try {
-                                final processedPath =
-                                    await _processAndSaveLogo(file.path);
-                                setState(() => _logoPath = processedPath);
-                                // Persist immediately so other parts of the app can use it
-                                await HiveDatabase.settingsBox
-                                    .put('shop_logo', processedPath);
-                              } catch (e) {
-                                // If processing fails, fallback to original path and persist
-                                setState(() => _logoPath = file.path);
-                                await HiveDatabase.settingsBox
-                                    .put('shop_logo', file.path);
-                              }
-                            }
-                          },
-                          icon: const Icon(Icons.upload_file),
-                          label: const Text('Upload Logo'),
-                        ),
+                        _isProcessingLogo
+                            ? const SizedBox(
+                                width: 120,
+                                height: 40,
+                                child: Center(
+                                    child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ))),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () async {
+                                  final picker = ImagePicker();
+                                  final XFile? file = await picker.pickImage(
+                                      source: ImageSource.gallery,
+                                      imageQuality: 80);
+                                  if (file != null) {
+                                    setState(() => _isProcessingLogo = true);
+                                    try {
+                                      final processedPath =
+                                          await _processAndSaveLogo(file.path);
+                                      setState(() => _logoPath = processedPath);
+                                      // Persist immediately so other parts of the app can use it
+                                      await HiveDatabase.settingsBox
+                                          .put('shop_logo', processedPath);
+                                    } catch (e) {
+                                      // If processing fails, fallback to original path and persist
+                                      setState(() => _logoPath = file.path);
+                                      await HiveDatabase.settingsBox
+                                          .put('shop_logo', file.path);
+                                    } finally {
+                                      if (mounted) {
+                                        setState(
+                                            () => _isProcessingLogo = false);
+                                      }
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.upload_file),
+                                label: const Text('Upload Logo'),
+                              ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -547,10 +575,13 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
             );
           },
         ),
-        bottomNavigationBar: PrimaryButton(
-          onPressed: _saveShop,
-          icon: Icons.save,
-          label: 'Save Details',
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(12),
+          child: PrimaryButton(
+            onPressed: _saveShop,
+            icon: Icons.save,
+            label: 'Save Details',
+          ),
         ));
   }
 }
