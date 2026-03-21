@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../../core/data/hive_database.dart';
+import 'dart:io';
 import '../../../../core/utils/currency_formatter.dart';
 import '../bloc/billing_bloc.dart';
 import 'dart:math' as math;
@@ -27,6 +29,9 @@ class _CheckoutPageState extends State<CheckoutPage>
   Operator? _pressedOperator;
   // Operator selection for Mobile Money
   Operator? _selectedOperator;
+  late final TextEditingController _amountReceivedController;
+  double _amountReceived = 0.0;
+  double _change = 0.0;
 
   String _operatorPhone(ShopState shopState) {
     if (shopState is ShopLoaded) {
@@ -49,7 +54,7 @@ class _CheckoutPageState extends State<CheckoutPage>
       case Operator.mvola:
         return const Color(0xFF002855); // Dark Blue
       case Operator.orange:
-        return const Color(0xFFFF8C00); // Orange
+        return const Color.fromARGB(255, 255, 123, 0); // Orange
       case Operator.airtel:
         return const Color(0xFFD32F2F); // Red
       default:
@@ -128,12 +133,27 @@ class _CheckoutPageState extends State<CheckoutPage>
     _floatController =
         AnimationController(vsync: this, duration: const Duration(seconds: 3))
           ..repeat();
+    _amountReceivedController = TextEditingController(text: '');
+    _amountReceivedController.addListener(_updateChange);
   }
 
   @override
   void dispose() {
     _floatController.dispose();
+    _amountReceivedController.removeListener(_updateChange);
+    _amountReceivedController.dispose();
     super.dispose();
+  }
+
+  void _updateChange() {
+    final raw =
+        _amountReceivedController.text.replaceAll(RegExp('[^0-9\.]'), '');
+    final parsed = double.tryParse(raw);
+    setState(() {
+      _amountReceived = parsed ?? 0.0;
+      _change =
+          (_amountReceived - (context.read<BillingBloc>().state.totalAmount));
+    });
   }
 
   double _phaseForOperator(Operator op) {
@@ -145,40 +165,6 @@ class _CheckoutPageState extends State<CheckoutPage>
       case Operator.airtel:
         return 4 * math.pi / 3;
     }
-  }
-
-  void _onPayPressed(ShopState shopState, double amount) async {
-    final phone = _operatorPhone(shopState);
-    if (phone.isEmpty || _selectedOperator == null) {
-      sbh.showAppSnackBar('Operator phone not configured', isError: true);
-      return;
-    }
-
-    final code = _operatorCode();
-    final ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
-
-    // Show a simple dialog with the generated USSD and option to copy
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('USSD Payment'),
-        content: Text('Dial this code to pay:\n$ussd'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: ussd));
-              sbh.showAppSnackBar('USSD code copied', isError: false);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Copy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _operatorButton(Operator op, String label) {
@@ -257,7 +243,9 @@ class _CheckoutPageState extends State<CheckoutPage>
 
   @override
   Widget build(BuildContext context) {
-    const borderColor = Color(0xFFE5E5EA);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor =
+        isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFE5E5EA);
 
     return PopScope(
         canPop: false,
@@ -296,11 +284,9 @@ class _CheckoutPageState extends State<CheckoutPage>
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
                 String upiId = '';
-                String shopName = 'Shop';
 
                 if (shopState is ShopLoaded) {
                   upiId = shopState.shop.upiId;
-                  shopName = shopState.shop.name;
                 }
 
                 return Column(
@@ -314,7 +300,9 @@ class _CheckoutPageState extends State<CheckoutPage>
                             // Table
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDark
+                                    ? const Color(0xFF1A1A1A)
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: borderColor),
                                 boxShadow: [
@@ -328,7 +316,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Table(
-                                  border: const TableBorder(
+                                  border: TableBorder(
                                     horizontalInside:
                                         BorderSide(color: borderColor),
                                     bottom: BorderSide(color: borderColor),
@@ -336,8 +324,10 @@ class _CheckoutPageState extends State<CheckoutPage>
                                   children: [
                                     // Header row
                                     TableRow(
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF8FAFC),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? const Color(0xFF2A2A2A)
+                                            : const Color(0xFFF8FAFC),
                                         border: Border(
                                             bottom:
                                                 BorderSide(color: borderColor)),
@@ -356,9 +346,8 @@ class _CheckoutPageState extends State<CheckoutPage>
                                       return TableRow(
                                         children: [
                                           _buildDataCell(
-                                            '${item.quantity} x ${item.product.name}',
-                                            TextAlign.left,
-                                          ),
+                                              '${item.quantity} x ${item.product.name}',
+                                              TextAlign.left),
                                           _buildDataCell(
                                               '${formatMGA(item.product.price)} Ar',
                                               TextAlign.right,
@@ -386,7 +375,9 @@ class _CheckoutPageState extends State<CheckoutPage>
                     // Bottom Bar
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: isDark
+                            ? Theme.of(context).cardColor.withOpacity(0.95)
+                            : Colors.white.withOpacity(0.9),
                         borderRadius: const BorderRadius.horizontal(
                             left: Radius.circular(24),
                             right: Radius.circular(24)),
@@ -413,12 +404,14 @@ class _CheckoutPageState extends State<CheckoutPage>
                                 upiId.isNotEmpty
                                     ? Column(
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Mobile money payment',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
+                                              color: isDark
+                                                  ? Colors.grey[200]
+                                                  : Colors.black87,
                                               letterSpacing: 1.1,
                                             ),
                                           ),
@@ -452,53 +445,142 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             12),
+                                                    color: Colors.white,
                                                     border: Border.all(
                                                         color: _operatorColor(),
                                                         width: 6),
                                                   ),
-                                                  child: PrettyQrView.data(
-                                                    data: _buildQrData(
-                                                        _operatorPhone(
-                                                            shopState),
-                                                        billingState
-                                                            .totalAmount),
+                                                  child: Center(
+                                                    child: Stack(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      children: [
+                                                        PrettyQrView.data(
+                                                          data: _buildQrData(
+                                                              _operatorPhone(
+                                                                  shopState),
+                                                              billingState
+                                                                  .totalAmount),
+                                                        ),
+                                                        // overlay processed logo at center if available
+                                                        Builder(builder: (ctx) {
+                                                          final settings =
+                                                              HiveDatabase
+                                                                  .settingsBox;
+                                                          final logoPath =
+                                                              settings.get(
+                                                                      'shop_logo')
+                                                                  as String?;
+                                                          if (logoPath !=
+                                                                  null &&
+                                                              logoPath
+                                                                  .isNotEmpty) {
+                                                            final f =
+                                                                File(logoPath);
+                                                            if (f
+                                                                .existsSync()) {
+                                                              return Container(
+                                                                width: 48,
+                                                                height: 48,
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(4),
+                                                                color: Colors
+                                                                    .white,
+                                                                child:
+                                                                    Image.file(
+                                                                  f,
+                                                                  fit: BoxFit
+                                                                      .contain,
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                          return const SizedBox
+                                                              .shrink();
+                                                        }),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                                const SizedBox(height: 8),
-                                                // Pay button triggers USSD dialing
-                                                PrimaryButton(
-                                                  onPressed: () => _launchUSSD(
-                                                      shopState,
-                                                      billingState.totalAmount),
-                                                  label: 'Pay',
-                                                  icon: Icons.payment,
-                                                ),
+                                                // small spacer to separate QR from surrounding elements
+                                                const SizedBox(height: 6),
                                               ],
                                             ),
                                         ],
                                       )
                                     : const SizedBox.shrink(),
-                                const SizedBox(height: 15),
+                                const SizedBox(height: 12),
+                                // Amount received input
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24.0, vertical: 8),
+                                  child: TextFormField(
+                                    controller: _amountReceivedController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    textAlign: TextAlign.end,
+                                    decoration: InputDecoration(
+                                      hintText: 'Vola nomena',
+                                      suffixText: 'Ar',
+                                      filled: true,
+                                      fillColor: Theme.of(context).cardColor,
+                                    ),
+                                  ),
+                                ),
+
+                                // Change display
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Fameriny',
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600)),
+                                      Text(
+                                        '${_change < 0 ? '-' : ''}${formatMGA(_change.abs())} Ar',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: _change < 0
+                                                ? Colors.red
+                                                : Theme.of(context)
+                                                    .primaryColor),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'GRAND TOTAL',
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF0F172A),
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
                                         letterSpacing: 1.2,
                                       ),
                                     ),
                                     Text(
                                       '${formatMGA(billingState.totalAmount)} Ariary',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: -0.5,
-                                        color: Color(0xFF0F172A),
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF0F172A),
                                       ),
                                     ),
                                   ],
@@ -507,15 +589,38 @@ class _CheckoutPageState extends State<CheckoutPage>
                             ),
                           ),
                           PrimaryButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (shopState is ShopLoaded) {
+                                if (_amountReceived <
+                                    billingState.totalAmount) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Amount received is less than total'),
+                                      backgroundColor: Colors.orange,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // If an operator is selected, initiate USSD dial before printing
+                                if (_selectedOperator != null) {
+                                  await _launchUSSD(
+                                      shopState, billingState.totalAmount);
+                                }
+
                                 context.read<BillingBloc>().add(
-                                    PrintReceiptEvent(
+                                      PrintReceiptEvent(
                                         shopName: shopState.shop.name,
                                         address1: shopState.shop.addressLine1,
                                         address2: shopState.shop.addressLine2,
                                         phone: shopState.shop.phoneNumber,
-                                        footer: shopState.shop.footerText));
+                                        amountReceived: _amountReceived,
+                                        change: _change,
+                                        footer: shopState.shop.footerText,
+                                      ),
+                                    );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -542,16 +647,18 @@ class _CheckoutPageState extends State<CheckoutPage>
   }
 
   Widget _buildHeaderCell(String text, TextAlign align) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? Colors.grey[300] : Colors.grey;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Text(
         text.toUpperCase(),
         textAlign: align,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
-          color: Colors.grey,
+          color: color,
         ),
       ),
     );
@@ -559,6 +666,9 @@ class _CheckoutPageState extends State<CheckoutPage>
 
   Widget _buildDataCell(String text, TextAlign align,
       {bool isBold = false, bool isSubtitle = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final normalColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[500];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       child: Text(
@@ -567,7 +677,7 @@ class _CheckoutPageState extends State<CheckoutPage>
         style: TextStyle(
           fontSize: isSubtitle ? 12 : 14,
           fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-          color: isSubtitle ? Colors.grey[500] : Colors.black87,
+          color: isSubtitle ? subtitleColor : normalColor,
         ),
       ),
     );

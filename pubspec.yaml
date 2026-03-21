@@ -35,6 +35,8 @@ dependencies:
   intl: ^0.19.0
   permission_handler: ^11.3.1
   image_picker: ^0.8.7+4
+  image: ^4.0.17
+  path_provider: ^2.0.14
   
   # Scanner & Printer
   pretty_qr_code: ^3.3.0

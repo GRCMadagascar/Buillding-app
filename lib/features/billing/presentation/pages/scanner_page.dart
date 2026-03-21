@@ -114,7 +114,8 @@ class _ScannerPageState extends State<ScannerPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF6C63FF),
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor ??
+          Theme.of(context).primaryColor,
       body: _permissionDenied
           ? SafeArea(
               child: Center(
@@ -177,7 +178,7 @@ class _ScannerPageState extends State<ScannerPage>
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Color.fromARGB(141, 255, 255, 255),
                             letterSpacing: 2,
                           ),
                         ),

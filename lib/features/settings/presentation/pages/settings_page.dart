@@ -104,8 +104,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
+                                // subtle thin white border instead of violet
                                 border: Border.all(
-                                    color: AppTheme.primaryColor, width: 2),
+                                    color: Colors.white24, width: 0.5),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
@@ -126,17 +127,27 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
 
-                          // Pencil button for cover
+                          // Pencil button for cover (smaller, with subtle white bg)
                           Positioned(
-                            top: 12,
-                            right: 8,
-                            child: Material(
-                              shape: const CircleBorder(),
-                              elevation: 4,
-                              color: Colors.white.withOpacity(0.7),
+                            top: 18,
+                            right: 16,
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
                               child: IconButton(
                                 padding: const EdgeInsets.all(4),
-                                icon: const Icon(Icons.edit, size: 16),
+                                icon: const Icon(Icons.edit, size: 14),
                                 color: AppTheme.primaryColor,
                                 onPressed: () async {
                                   final picked = await _picker.pickImage(
@@ -175,12 +186,20 @@ class _SettingsPageState extends State<SettingsPage> {
                                           Align(
                                             alignment: Alignment.center,
                                             child: Container(
-                                              width: 116,
-                                              height: 116,
+                                              width: 120,
+                                              height: 120,
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context)
-                                                    .scaffoldBackgroundColor,
+                                                // white gap to make the profile image pop
+                                                color: Colors.white,
                                                 shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.03),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
@@ -210,6 +229,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                     offset: const Offset(0, 6),
                                                   ),
                                                 ],
+                                                border: Border.all(
+                                                    color: Colors.white24,
+                                                    width: 0.5),
                                               ),
                                               alignment: Alignment.center,
                                               child: _profileImage == null
@@ -239,16 +261,27 @@ class _SettingsPageState extends State<SettingsPage> {
                                           Positioned(
                                             right: 8,
                                             bottom: 8,
-                                            child: Material(
-                                              shape: const CircleBorder(),
-                                              elevation: 4,
-                                              color:
-                                                  Colors.white.withOpacity(0.7),
+                                            child: Container(
+                                              width: 34,
+                                              height: 34,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.8),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
                                               child: IconButton(
                                                 padding:
                                                     const EdgeInsets.all(4),
                                                 icon: const Icon(Icons.edit,
-                                                    size: 16),
+                                                    size: 14),
                                                 color: AppTheme.primaryColor,
                                                 onPressed: () async {
                                                   final picked =

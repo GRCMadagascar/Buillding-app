@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFF03DAC6);
+  static const Color primaryColor = Color.fromARGB(255, 216, 53, 3);
+  static const Color secondaryColor = Color.fromARGB(255, 114, 3, 218);
   static const Color backgroundColor = Color(0xFFF2F2F7);
   static const Color surfaceColor = Colors.white;
-  static const Color errorColor = Color(0xFFB00020);
+  static const Color errorColor = Color.fromARGB(255, 214, 9, 9);
 
   static final TextTheme textTheme =
       GoogleFonts.ibmPlexSansTextTheme().copyWith(

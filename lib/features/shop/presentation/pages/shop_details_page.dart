@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/entities/shop.dart';
+import '../../../../core/data/hive_database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../bloc/shop_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
@@ -20,12 +25,19 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _nameController;
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
+  late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _facebookController;
+  late TextEditingController _instagramController;
+  late TextEditingController _tiktokController;
+  late TextEditingController _whatsappController;
+  late TextEditingController _adminController;
   late TextEditingController _upiController;
   late TextEditingController _footerController;
   late TextEditingController _mvolaController;
   late TextEditingController _orangeController;
   late TextEditingController _airtelController;
+  String? _logoPath;
 
   @override
   void initState() {
@@ -33,7 +45,13 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _nameController = TextEditingController();
     _address1Controller = TextEditingController();
     _address2Controller = TextEditingController();
+    _emailController = TextEditingController();
     _phoneController = TextEditingController();
+    _facebookController = TextEditingController();
+    _instagramController = TextEditingController();
+    _tiktokController = TextEditingController();
+    _whatsappController = TextEditingController();
+    _adminController = TextEditingController();
     _upiController = TextEditingController();
     _footerController = TextEditingController();
     _mvolaController = TextEditingController(text: '');
@@ -42,6 +60,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
 
     // Load shop data
     context.read<ShopBloc>().add(LoadShopEvent());
+
+    // Load settings (logo/socials/admin)
+    final settings = HiveDatabase.settingsBox;
+    _logoPath = settings.get('shop_logo');
+    _facebookController.text = settings.get('shop_facebook') ?? '';
+    _instagramController.text = settings.get('shop_instagram') ?? '';
+    _tiktokController.text = settings.get('shop_tiktok') ?? '';
+    _whatsappController.text = settings.get('shop_whatsapp') ?? '';
+    _adminController.text = settings.get('shop_admin') ?? '';
   }
 
   void _updateControllers(Shop? shop) {
@@ -56,7 +83,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       _address1Controller.text = shop.addressLine1;
     }
     if (_address2Controller.text.isEmpty && (shop.addressLine2).isNotEmpty) {
+      // Previously addressLine2 was used; treat it as email now
       _address2Controller.text = shop.addressLine2;
+      if (_emailController.text.isEmpty)
+        _emailController.text = shop.addressLine2;
     }
     if (_phoneController.text.isEmpty && (shop.phoneNumber).isNotEmpty) {
       _phoneController.text = shop.phoneNumber;
@@ -85,7 +115,13 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _nameController.dispose();
     _address1Controller.dispose();
     _address2Controller.dispose();
+    _emailController.dispose();
     _phoneController.dispose();
+    _facebookController.dispose();
+    _instagramController.dispose();
+    _tiktokController.dispose();
+    _whatsappController.dispose();
+    _adminController.dispose();
     _upiController.dispose();
     _footerController.dispose();
     _mvolaController.dispose();
@@ -94,12 +130,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     super.dispose();
   }
 
-  void _saveShop() {
+  Future<void> _saveShop() async {
     if (_formKey.currentState!.validate()) {
       final shop = Shop(
         name: _nameController.text,
         addressLine1: _address1Controller.text,
-        addressLine2: _address2Controller.text,
+        // store email in addressLine2 for backward compatibility
+        addressLine2: _emailController.text.isNotEmpty
+            ? _emailController.text
+            : _address2Controller.text,
         phoneNumber: _phoneController.text,
         upiId: _upiController.text,
         footerText: _footerController.text,
@@ -108,8 +147,106 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         airtelMoneyNumber: _airtelController.text,
       );
 
+      // Persist socials, admin and logo into settingsBox
+      final settings = HiveDatabase.settingsBox;
+      await settings.put('shop_facebook', _facebookController.text);
+      await settings.put('shop_instagram', _instagramController.text);
+      await settings.put('shop_tiktok', _tiktokController.text);
+      await settings.put('shop_whatsapp', _whatsappController.text);
+      await settings.put('shop_admin', _adminController.text);
+      if (_logoPath != null) await settings.put('shop_logo', _logoPath);
+
       context.read<ShopBloc>().add(UpdateShopEvent(shop));
     }
+  }
+
+  /// Process the picked image file to remove near-white background and convert
+  /// the visible pixels into high-contrast black (transparent elsewhere).
+  Future<String> _processAndSaveLogo(String originalPath) async {
+    final originalFile = File(originalPath);
+    if (!await originalFile.exists()) return originalPath;
+
+    final bytes = await originalFile.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) return originalPath;
+
+    // Create a copy we can modify in RGBA
+    final working = img.Image.from(decoded);
+
+    // Thresholds
+    const int bgThreshold = 240; // near-white background threshold
+    const double luminanceThreshold = 128.0;
+
+    for (int y = 0; y < working.height; y++) {
+      for (int x = 0; x < working.width; x++) {
+        final pixel = working.getPixel(x, y);
+        final int r = pixel.r as int;
+        final int g = pixel.g as int;
+        final int b = pixel.b as int;
+
+        // If nearly white, make transparent
+        if (r >= bgThreshold && g >= bgThreshold && b >= bgThreshold) {
+          working.setPixelRgba(x, y, 0, 0, 0, 0);
+          continue;
+        }
+
+        // Compute luminance
+        final luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        // For high-contrast logo for thermal printers, set dark pixels to opaque black
+        // and light pixels to transparent (so background stays transparent)
+        if (luminance < luminanceThreshold) {
+          // black pixel, fully opaque
+          working.setPixelRgba(x, y, 0, 0, 0, 255);
+        } else {
+          // light pixel: make transparent
+          working.setPixelRgba(x, y, 0, 0, 0, 0);
+        }
+      }
+    }
+
+    final png = img.encodePng(working, level: 1);
+
+    final dir = await getApplicationDocumentsDirectory();
+    final savePath = '${dir.path}/shop_logo_processed.png';
+    final outFile = File(savePath);
+    await outFile.writeAsBytes(png, flush: true);
+
+    return savePath;
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    int? maxLength,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      maxLength: maxLength,
+      textCapitalization: TextCapitalization.words,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          color:
+              Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
+                  Colors.grey[500],
+          fontWeight: FontWeight.w500,
+        ),
+        border: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      ),
+    );
   }
 
   @override
@@ -176,10 +313,134 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Address Line 2 (Optional)'),
+                    const InputLabel(text: 'Email (Optional)'),
                     _buildTextField(
-                      controller: _address2Controller,
-                      hint: 'Address (Optional)',
+                      controller: _emailController,
+                      hint: 'email@yourshop.com',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 15),
+                    const InputLabel(text: 'Admin Name'),
+                    _buildTextField(
+                      controller: _adminController,
+                      hint: 'Admin name for receipts',
+                    ),
+                    const SizedBox(height: 15),
+                    const InputLabel(text: 'Shop Logo'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _logoPath != null
+                            ? Image.file(File(_logoPath!),
+                                width: 72, height: 72)
+                            : Container(
+                                width: 72,
+                                height: 72,
+                                color: Theme.of(context).cardColor,
+                                child: const Icon(Icons.image, size: 36),
+                              ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final picker = ImagePicker();
+                            final XFile? file = await picker.pickImage(
+                                source: ImageSource.gallery, imageQuality: 80);
+                            if (file != null) {
+                              // Process the image: remove near-white background and convert to high-contrast black-only PNG
+                              try {
+                                final processedPath =
+                                    await _processAndSaveLogo(file.path);
+                                setState(() => _logoPath = processedPath);
+                                // Persist immediately so other parts of the app can use it
+                                await HiveDatabase.settingsBox
+                                    .put('shop_logo', processedPath);
+                              } catch (e) {
+                                // If processing fails, fallback to original path and persist
+                                setState(() => _logoPath = file.path);
+                                await HiveDatabase.settingsBox
+                                    .put('shop_logo', file.path);
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.upload_file),
+                          label: const Text('Upload Logo'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Receipt Preview
+                    const InputLabel(text: 'Receipt Preview'),
+                    const SizedBox(height: 8),
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            if (_logoPath != null)
+                              Center(
+                                child: Container(
+                                  color: Colors.white,
+                                  padding: const EdgeInsets.all(8),
+                                  child: Image.file(
+                                    File(_logoPath!),
+                                    width: 140,
+                                    height: 80,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 140,
+                                height: 80,
+                                color: Theme.of(context).cardColor,
+                                child: const Icon(Icons.image, size: 48),
+                              ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _nameController.text.isNotEmpty
+                                  ? _nameController.text
+                                  : 'Shop Name',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(_emailController.text.isNotEmpty
+                                ? _emailController.text
+                                : ''),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const InputLabel(text: 'Social Links'),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                      controller: _facebookController,
+                      hint: 'Facebook link or handle',
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _instagramController,
+                      hint: 'Instagram handle',
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _tiktokController,
+                      hint: 'TikTok handle',
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _whatsappController,
+                      hint: 'WhatsApp number or link',
+                      keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Phone Number'),
@@ -291,39 +552,5 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
           icon: Icons.save,
           label: 'Save Details',
         ));
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-    int? maxLength,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      textCapitalization: TextCapitalization.words,
-      validator: validator,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color:
-              Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
-                  Colors.grey[500],
-          fontWeight: FontWeight.w500,
-        ),
-        border: const OutlineInputBorder(
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Theme.of(context).cardColor,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      ),
-    );
   }
 }

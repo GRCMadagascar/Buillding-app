@@ -413,29 +413,29 @@ class _HomePageState extends State<HomePage> {
     return Align(
       alignment: alignment,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 27,
+        height: 27,
         decoration: BoxDecoration(
           border: Border(
             top: (alignment == Alignment.topLeft ||
                     alignment == Alignment.topRight)
                 ? const BorderSide(
-                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
+                    color: Color.fromARGB(255, 94, 226, 89), width: 3)
                 : BorderSide.none,
             bottom: (alignment == Alignment.bottomLeft ||
                     alignment == Alignment.bottomRight)
                 ? const BorderSide(
-                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
+                    color: Color.fromARGB(255, 94, 226, 89), width: 3)
                 : BorderSide.none,
             left: (alignment == Alignment.topLeft ||
                     alignment == Alignment.bottomLeft)
                 ? const BorderSide(
-                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
+                    color: Color.fromARGB(255, 94, 226, 89), width: 3)
                 : BorderSide.none,
             right: (alignment == Alignment.topRight ||
                     alignment == Alignment.bottomRight)
                 ? const BorderSide(
-                    color: Color.fromARGB(255, 94, 226, 89), width: 4)
+                    color: Color.fromARGB(255, 94, 226, 89), width: 3)
                 : BorderSide.none,
           ),
         ),
@@ -496,18 +496,18 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TOTAL EN ARIARY',
+                        Text('TOTAL EN ARIARY',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                                color: Colors.white70,
                                 letterSpacing: 1.2)),
                         Text(
                           '${formatMGA(state.totalAmount)} Ar',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: Theme.of(context).primaryColor),
+                              color: Colors.white),
                         ),
                       ],
                     ),
@@ -556,7 +556,7 @@ class _HomePageState extends State<HomePage> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Theme.of(context).colorScheme.surface,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -586,11 +586,11 @@ class _HomePageState extends State<HomePage> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Colors.white12),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -613,10 +613,10 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 4),
                 Text(
                   '${formatMGA(item.product.price)} Ar',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -624,7 +624,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(4),
@@ -651,7 +651,8 @@ class _HomePageState extends State<HomePage> {
                   child: Text(
                     '${item.quantity}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
                 _circularIconButton(
@@ -678,7 +679,7 @@ class _HomePageState extends State<HomePage> {
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: Icon(icon, size: 20, color: Colors.grey[600]),
+        child: Icon(icon, size: 20, color: Colors.white),
       ),
     );
   }
