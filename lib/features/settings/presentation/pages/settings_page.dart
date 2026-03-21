@@ -489,17 +489,20 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 24),
 
                   const SizedBox(height: 20),
-                  const Center(
-                    child: Text(
-                      "Edited by | Ranto Nandrianina 2026",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6C63FF),
-                        fontStyle: FontStyle.italic,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: Center(
+                      child: Text(
+                        "Edited by | Ranto Nandrianina 2026",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFFF6C63FF),
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
