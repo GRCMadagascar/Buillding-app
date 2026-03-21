@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/locale/language_cubit.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
@@ -59,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(AppLocalizations.of(context)?.settings ?? 'Settings',
+              title: Text(AppLocalizations.of(context)!.settings,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 18)),
               centerTitle: true,
@@ -75,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 BlocBuilder<LanguageCubit, LanguageState>(
                     builder: (context, lang) {
                   return PopupMenuButton<String>(
-                    tooltip: 'Language',
+                    tooltip: AppLocalizations.of(context)!.language,
                     icon: const Icon(Icons.language),
                     onSelected: (code) {
                       // Persist and update global locale via LanguageCubit at app root
@@ -84,18 +84,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     itemBuilder: (ctx) => [
                       PopupMenuItem(
                         value: 'mg',
-                        child:
-                            Row(children: [Text('🇲🇬  Malagasy (MGA / Ar)')]),
+                        child: Row(children: [
+                          Text(AppLocalizations.of(context)!.malagasyLabel)
+                        ]),
                       ),
                       PopupMenuItem(
                         value: 'fr',
-                        child:
-                            Row(children: [Text('🇫🇷  Français (EUR / €)')]),
+                        child: Row(children: [
+                          Text(AppLocalizations.of(context)!.frenchLabel)
+                        ]),
                       ),
                       PopupMenuItem(
                         value: 'en',
-                        child:
-                            Row(children: [Text('🇬🇧  English (USD / \$)')]),
+                        child: Row(children: [
+                          Text(AppLocalizations.of(context)!.englishLabel)
+                        ]),
                       ),
                     ],
                   );
@@ -378,20 +381,22 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 24),
 
                   // Management Section
-                  _buildSectionHeader('Management'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.management),
                   _buildListGroup(
                     children: [
                       _buildListItem(
                         icon: Icons.qr_code_scanner,
-                        title: 'Products',
-                        subtitle: 'Manage stock and barcodes',
+                        title: AppLocalizations.of(context)!.products,
+                        subtitle: AppLocalizations.of(context)!
+                            .manageStockAndBarcodes,
                         onTap: () => context.push('/products'),
                       ),
                       _buildDivider(),
                       _buildListItem(
                         icon: Icons.storefront,
-                        title: 'Shop Details',
-                        subtitle: 'Edit business info & address',
+                        title: AppLocalizations.of(context)!.shopDetails,
+                        subtitle: AppLocalizations.of(context)!
+                            .editBusinessInfoAndAddress,
                         onTap: () => context.push('/shop'),
                       ),
                     ],
@@ -400,7 +405,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 24),
 
                   // Hardware Section
-                  _buildSectionHeader('Hardware'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.hardware),
                   BlocConsumer<PrinterBloc, PrinterState>(
                     listener: (context, state) {
                       if (state.errorMessage != null) {
@@ -408,10 +413,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             content: Text(state.errorMessage!),
                             backgroundColor: Colors.red));
                       } else if (state.status == PrinterStatus.connected) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Connected to printer'),
-                                backgroundColor: Colors.green));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(AppLocalizations.of(context)!
+                                .connectedToPrinter),
+                            backgroundColor: Colors.green));
                       }
                     },
                     builder: (context, state) {
@@ -425,8 +430,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Text(
                                   state.connectedMac != null
                                       ? (state.connectedName ??
-                                          'Printer connected')
-                                      : 'No printer connected',
+                                          AppLocalizations.of(context)!
+                                              .printerConnected)
+                                      : AppLocalizations.of(context)!
+                                          .noPrinterConnected,
                                   style: TextStyle(
                                       fontSize: 12, color: Colors.grey[500]),
                                 ),
@@ -441,7 +448,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                         border: Border.all(
                                             color: Colors.teal[200]!)),
                                     child: Text(
-                                      'CONNECTED',
+                                      AppLocalizations.of(context)!.connected,
                                       style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,
@@ -489,7 +496,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
                     child: Text(
-                      "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
+                      AppLocalizations.of(context)!.connectDeviceInstructions,
                       style: TextStyle(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
@@ -500,7 +507,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 16),
 
                   // Appearance / Dark Mode
-                  _buildSectionHeader('Appearance'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.appearance),
                   _buildListGroup(
                     children: [
                       BlocBuilder<ThemeCubit, ThemeMode>(
@@ -508,8 +515,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         final isDark = mode == ThemeMode.dark;
                         return _buildListItem(
                           icon: Icons.dark_mode,
-                          title: 'Dark Mode',
-                          subtitle: isDark ? 'Enabled' : 'Disabled',
+                          title: AppLocalizations.of(context)!.darkMode,
+                          subtitle: isDark
+                              ? AppLocalizations.of(context)!.enabled
+                              : AppLocalizations.of(context)!.disabled,
                           trailingWidget: Switch(
                             value: isDark,
                             activeThumbColor: const Color(0xFF6C63FF),

@@ -1,0 +1,23 @@
+{
+  "@@locale": "fr",
+  "settings": "Paramètres",
+  "language": "Langue",
+  "malagasyLabel": "🇲🇬  Malagasy (MGA / Ar)",
+  "frenchLabel": "🇫🇷  Français (EUR / €)",
+  "englishLabel": "🇬🇧  English (USD / $)",
+  "management": "Gestion",
+  "products": "Produits",
+  "manageStockAndBarcodes": "Gérer le stock et les codes-barres",
+  "shopDetails": "Détails de la boutique",
+  "editBusinessInfoAndAddress": "Modifier les informations et l'adresse de l'entreprise",
+  "hardware": "Matériel",
+  "connectedToPrinter": "Connecté à l'imprimante",
+  "printerConnected": "Imprimante connectée",
+  "noPrinterConnected": "Aucune imprimante connectée",
+  "connected": "CONNECTÉ",
+  "connectDeviceInstructions": "Pour connecter un nouvel appareil, appuyez sur l'icône Paramètres pour appairer dans les paramètres Bluetooth du téléphone, puis revenez et appuyez sur Actualiser.",
+  "appearance": "Apparence",
+  "darkMode": "Mode sombre",
+  "enabled": "Activé",
+  "disabled": "Désactivé"
+}

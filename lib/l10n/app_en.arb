@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "settings": "Settings",
+  "language": "Language",
+  "malagasyLabel": "🇲🇬  Malagasy (MGA / Ar)",
+  "frenchLabel": "🇫🇷  Français (EUR / €)",
+  "englishLabel": "🇬🇧  English (USD / $)",
+  "management": "Management",
+  "products": "Products",
+  "manageStockAndBarcodes": "Manage stock and barcodes",
+  "shopDetails": "Shop Details",
+  "editBusinessInfoAndAddress": "Edit business info & address",
+  "hardware": "Hardware",
+  "connectedToPrinter": "Connected to printer",
+  "printerConnected": "Printer connected",
+  "noPrinterConnected": "No printer connected",
+  "connected": "CONNECTED",
+  "connectDeviceInstructions": "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
+  "appearance": "Appearance",
+  "darkMode": "Dark Mode",
+  "enabled": "Enabled",
+  "disabled": "Disabled"
+}

@@ -8,7 +8,7 @@ import 'core/theme/theme_cubit.dart';
 import 'core/utils/snackbar_helper.dart';
 import 'core/locale/language_cubit.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';

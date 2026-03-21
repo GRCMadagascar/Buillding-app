@@ -1,0 +1,23 @@
+{
+  "@@locale": "mg",
+  "settings": "Fikirakirana",
+  "language": "Fiteny",
+  "malagasyLabel": "🇲🇬  Malagasy (MGA / Ar)",
+  "frenchLabel": "🇫🇷  Français (EUR / €)",
+  "englishLabel": "🇬🇧  English (USD / $)",
+  "management": "Fitantanana",
+  "products": "Vokatra",
+  "manageStockAndBarcodes": "Mitantana tahiry sy barcodes",
+  "shopDetails": "Antsipirian'ny fivarotana",
+  "editBusinessInfoAndAddress": "Hanova ny mombamomba ny orinasanao sy adiresy",
+  "hardware": "Fitaovana",
+  "connectedToPrinter": "Mifandray amin'ny mpanonta",
+  "printerConnected": "Mpanonta mifandray",
+  "noPrinterConnected": "Tsy misy mpanonta mifandray",
+  "connected": "MIFANDRAY",
+  "connectDeviceInstructions": "Hametraka fitaovana vaovao, tsindrio ny kisary Settings mba hampifandray ao amin'ny Bluetooth an-telefaona, avy eo miverena ary tsindrio Refresh.",
+  "appearance": "Bika aman'endrika",
+  "darkMode": "Maody maizina",
+  "enabled": "Alefa",
+  "disabled": "Vonja"
+}
