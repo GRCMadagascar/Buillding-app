@@ -7,6 +7,8 @@ import 'package:app_settings/app_settings.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/locale/language_cubit.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
@@ -35,8 +37,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<SettingsBloc>(
-      create: (_) => SettingsBloc()..add(LoadSettingsEvent()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<SettingsBloc>(
+            create: (_) => SettingsBloc()..add(LoadSettingsEvent())),
+      ],
       child: BlocListener<SettingsBloc, SettingsState>(
         listener: (context, state) {
           // Update local XFile representations when settings change
@@ -54,8 +59,9 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Settings',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              title: Text(AppLocalizations.of(context)?.settings ?? 'Settings',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
               centerTitle: true,
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -64,6 +70,37 @@ class _SettingsPageState extends State<SettingsPage> {
                     size: 28, color: Theme.of(context).primaryColor),
                 onPressed: () => context.pop(),
               ),
+              actions: [
+                // Language switcher
+                BlocBuilder<LanguageCubit, LanguageState>(
+                    builder: (context, lang) {
+                  return PopupMenuButton<String>(
+                    tooltip: 'Language',
+                    icon: const Icon(Icons.language),
+                    onSelected: (code) {
+                      // Persist and update global locale via LanguageCubit at app root
+                      context.read<LanguageCubit>().setLanguageCode(code);
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'mg',
+                        child:
+                            Row(children: [Text('🇲🇬  Malagasy (MGA / Ar)')]),
+                      ),
+                      PopupMenuItem(
+                        value: 'fr',
+                        child:
+                            Row(children: [Text('🇫🇷  Français (EUR / €)')]),
+                      ),
+                      PopupMenuItem(
+                        value: 'en',
+                        child:
+                            Row(children: [Text('🇬🇧  English (USD / \$)')]),
+                      ),
+                    ],
+                  );
+                })
+              ],
             ),
             body: SingleChildScrollView(
               child: Column(

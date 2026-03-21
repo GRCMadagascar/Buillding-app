@@ -6,6 +6,9 @@ import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/utils/snackbar_helper.dart';
+import 'core/locale/language_cubit.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
@@ -37,48 +40,68 @@ class MyApp extends StatelessWidget {
             create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
         // Theme management Cubit
         BlocProvider<ThemeCubit>(
-          create: (_) => ThemeCubit()
-            ..loadFromPersistence(),
+          create: (_) => ThemeCubit()..loadFromPersistence(),
+        ),
+        // Language / Locale Cubit (persisted)
+        BlocProvider<LanguageCubit>(
+          create: (_) => LanguageCubit()..loadFromPersistence(),
         ),
       ],
-      child: BlocBuilder<ThemeCubit, ThemeMode>(builder: (context, mode) {
-        return MaterialApp.router(
-          title: 'Mobile POS',
-          // Keep the base themes from AppTheme but inject our global SnackBar style
-          theme: AppTheme.lightTheme.copyWith(
-            snackBarTheme: const SnackBarThemeData(
-              behavior: SnackBarBehavior.floating,
-              shape: StadiumBorder(),
-              backgroundColor: Color(0xFFD32F2F), // default error red
-              elevation: 6.0,
-              contentTextStyle: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 15.0,
-              ),
-            ),
-          ),
-          darkTheme: AppTheme.darkTheme.copyWith(
-            snackBarTheme: const SnackBarThemeData(
-              behavior: SnackBarBehavior.floating,
-              shape: StadiumBorder(),
-              backgroundColor: Color(0xFFD32F2F),
-              elevation: 6.0,
-              contentTextStyle: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 15.0,
-              ),
-            ),
-          ),
-          themeMode: mode,
-          // Use global scaffold messenger key so the helper can show snackbars
-          scaffoldMessengerKey: scaffoldMessengerKey,
-          routerConfig: router,
-          debugShowCheckedModeBanner: false,
-        );
-      }),
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, mode) {
+          return BlocBuilder<LanguageCubit, LanguageState>(
+            builder: (context, lang) {
+              return MaterialApp.router(
+                locale: lang.locale,
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('fr'),
+                  Locale('mg'),
+                ],
+                title: 'Mobile POS',
+                // Keep the base themes from AppTheme but inject our global SnackBar style
+                theme: AppTheme.lightTheme.copyWith(
+                  snackBarTheme: const SnackBarThemeData(
+                    behavior: SnackBarBehavior.floating,
+                    shape: StadiumBorder(),
+                    backgroundColor: Color(0xFFD32F2F), // default error red
+                    elevation: 6.0,
+                    contentTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.0,
+                    ),
+                  ),
+                ),
+                darkTheme: AppTheme.darkTheme.copyWith(
+                  snackBarTheme: const SnackBarThemeData(
+                    behavior: SnackBarBehavior.floating,
+                    shape: StadiumBorder(),
+                    backgroundColor: Color(0xFFD32F2F),
+                    elevation: 6.0,
+                    contentTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.0,
+                    ),
+                  ),
+                ),
+                themeMode: mode,
+                // Use global scaffold messenger key so the helper can show snackbars
+                scaffoldMessengerKey: scaffoldMessengerKey,
+                routerConfig: router,
+                debugShowCheckedModeBanner: false,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
-
