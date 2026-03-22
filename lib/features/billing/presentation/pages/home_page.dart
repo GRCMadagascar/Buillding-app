@@ -503,7 +503,6 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white70,
                                 letterSpacing: 1.2)),
                         Text(
                           '${formatMGA(state.totalAmount)} Ar',
