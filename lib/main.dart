@@ -52,19 +52,12 @@ class MyApp extends StatelessWidget {
           return BlocBuilder<LanguageCubit, LanguageState>(
             builder: (context, lang) {
               return MaterialApp.router(
-                // Use locale from LanguageCubit (LanguageCubit defaults to English)
+                // Use locale from LanguageCubit (LanguageCubit defaults to French)
                 locale: lang.locale,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('en'),
-                  Locale('fr'),
-                  Locale('mg'),
-                ],
+                // Use generated delegates & supported locales from gen-l10n so
+                // the app recognizes all provided locales and delegates.
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
                 title: 'GRC POS SYSTEM',
                 // Keep the base themes from AppTheme but inject our global SnackBar style
                 theme: AppTheme.lightTheme.copyWith(
@@ -93,7 +86,10 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
-                themeMode: mode,
+                // Force Dark Mode as the default experience. If you later want
+                // to respect user choice, switch this back to `mode` or adjust
+                // ThemeCubit to emit the preferred default.
+                themeMode: ThemeMode.dark,
                 // Use global scaffold messenger key so the helper can show snackbars
                 scaffoldMessengerKey: scaffoldMessengerKey,
                 routerConfig: router,

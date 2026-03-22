@@ -19,7 +19,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
     return ShopModel(
       name: fields[0] as String,
       addressLine1: fields[1] as String,
-      addressLine2: fields[2] as String,
+      email: fields[2] as String,
       phoneNumber: fields[3] as String,
       upiId: fields[4] as String,
       footerText: fields[5] as String,
@@ -38,7 +38,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
       ..writeByte(1)
       ..write(obj.addressLine1)
       ..writeByte(2)
-      ..write(obj.addressLine2)
+      ..write(obj.email)
       ..writeByte(3)
       ..write(obj.phoneNumber)
       ..writeByte(4)
@@ -71,7 +71,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
 ShopModel _$ShopModelFromJson(Map<String, dynamic> json) => ShopModel(
       name: json['name'] as String? ?? '',
       addressLine1: json['addressLine1'] as String? ?? '',
-      addressLine2: json['addressLine2'] as String? ?? '',
+      email: json['emailaddress'] as String? ?? '',
       phoneNumber: json['phoneNumber'] as String? ?? '',
       upiId: json['upiId'] as String? ?? '',
       footerText: json['footerText'] as String? ?? '',
@@ -83,7 +83,7 @@ ShopModel _$ShopModelFromJson(Map<String, dynamic> json) => ShopModel(
 Map<String, dynamic> _$ShopModelToJson(ShopModel instance) => <String, dynamic>{
       'name': instance.name,
       'addressLine1': instance.addressLine1,
-      'addressLine2': instance.addressLine2,
+      'emailaddress': instance.email,
       'phoneNumber': instance.phoneNumber,
       'upiId': instance.upiId,
       'footerText': instance.footerText,

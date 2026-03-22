@@ -216,6 +216,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabled'**
   String get disabled;
+
+  /// No description provided for @selectProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Products'**
+  String get selectProductsTitle;
+
+  /// No description provided for @searchProductNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search product name...'**
+  String get searchProductNameHint;
+
+  /// No description provided for @reviewOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Order'**
+  String get reviewOrder;
+
+  /// No description provided for @cameraOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is turned off'**
+  String get cameraOffTitle;
+
+  /// No description provided for @cameraOffInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on your camera to start scanning barcodes and items automatically.'**
+  String get cameraOffInstructions;
+
+  /// No description provided for @turnOnCameraButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Camera'**
+  String get turnOnCameraButton;
+
+  /// No description provided for @scannedItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned Items'**
+  String get scannedItems;
+
+  /// No description provided for @scannedItemsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned items will appear here as you scan them with the camera above.'**
+  String get scannedItemsHelp;
+
+  /// No description provided for @printReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Receipt'**
+  String get printReceipt;
+
+  /// No description provided for @totalInAriary.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTAL IN ARIARY'**
+  String get totalInAriary;
+
+  /// No description provided for @listIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'List is empty'**
+  String get listIsEmpty;
+
+  /// No description provided for @openScannerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the icon to open camera scanner'**
+  String get openScannerHint;
+
+  /// No description provided for @scannerNotImplemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanner not implemented'**
+  String get scannerNotImplemented;
+
+  /// No description provided for @pleaseEnterBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a barcode'**
+  String get pleaseEnterBarcode;
+
+  /// No description provided for @pleaseEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
+  String get pleaseEnterName;
+
+  /// No description provided for @pleaseEnterPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid price'**
+  String get pleaseEnterPrice;
+
+  /// No description provided for @addProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get addProduct;
+
+  /// No description provided for @addProductButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get addProductButton;
+
+  /// No description provided for @productBarcodeExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Product with barcode \"{barcode}\" already exists!'**
+  String productBarcodeExists(Object barcode);
+
+  /// No description provided for @noProductsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No products found. Add some!'**
+  String get noProductsFound;
+
+  /// No description provided for @noProductsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match your search.'**
+  String get noProductsMatch;
+
+  /// No description provided for @deleteProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Product'**
+  String get deleteProductTitle;
+
+  /// No description provided for @deleteProductConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {name}?'**
+  String deleteProductConfirm(Object name);
+
+  /// No description provided for @productDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Product deleted successfully'**
+  String get productDeletedSuccess;
+
+  /// No description provided for @productAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Product added successfully'**
+  String get productAddedSuccess;
+
+  /// No description provided for @productUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Product updated successfully'**
+  String get productUpdatedSuccess;
+
+  /// No description provided for @cameraPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is required to scan barcodes.'**
+  String get cameraPermissionRequired;
+
+  /// No description provided for @openAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open App Settings'**
+  String get openAppSettings;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @checkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get checkout;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorOccurred;
+
+  /// No description provided for @editProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Product'**
+  String get editProduct;
+
+  /// No description provided for @editBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Barcode'**
+  String get editBarcode;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @productName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Name'**
+  String get productName;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceLabel;
+
+  /// No description provided for @barcodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get barcodeLabel;
+
+  /// No description provided for @paymentSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Settings'**
+  String get paymentSettings;
+
+  /// No description provided for @paymentSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money numbers used during checkout'**
+  String get paymentSettingsSubtitle;
+
+  /// No description provided for @mvolaNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'MVola Number'**
+  String get mvolaNumberLabel;
+
+  /// No description provided for @orangeNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange Money Number'**
+  String get orangeNumberLabel;
+
+  /// No description provided for @airtelNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Airtel Money Number'**
+  String get airtelNumberLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

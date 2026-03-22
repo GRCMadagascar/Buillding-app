@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../bloc/shop_bloc.dart';
@@ -63,7 +64,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _address1Controller;
-  late TextEditingController _address2Controller;
+  // late TextEditingController _emailController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _facebookController;
@@ -84,7 +85,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     super.initState();
     _nameController = TextEditingController();
     _address1Controller = TextEditingController();
-    _address2Controller = TextEditingController();
+    _emailController = TextEditingController();
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
     _facebookController = TextEditingController();
@@ -122,11 +123,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     if (_address1Controller.text.isEmpty && (shop.addressLine1).isNotEmpty) {
       _address1Controller.text = shop.addressLine1;
     }
-    if (_address2Controller.text.isEmpty && (shop.addressLine2).isNotEmpty) {
-      // Previously addressLine2 was used; treat it as email now
-      _address2Controller.text = shop.addressLine2;
-      if (_emailController.text.isEmpty)
-        _emailController.text = shop.addressLine2;
+    if (_emailController.text.isEmpty && (shop.email).isNotEmpty) {
+      // Previously email was used; treat it as email now
+      _emailController.text = shop.email;
+      if (_emailController.text.isEmpty) _emailController.text = shop.email;
     }
     if (_phoneController.text.isEmpty && (shop.phoneNumber).isNotEmpty) {
       _phoneController.text = shop.phoneNumber;
@@ -154,7 +154,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   void dispose() {
     _nameController.dispose();
     _address1Controller.dispose();
-    _address2Controller.dispose();
+    _emailController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _facebookController.dispose();
@@ -175,10 +175,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       final shop = Shop(
         name: _nameController.text,
         addressLine1: _address1Controller.text,
-        // store email in addressLine2 for backward compatibility
-        addressLine2: _emailController.text.isNotEmpty
+        // store email in email for backward compatibility
+        email: _emailController.text.isNotEmpty
             ? _emailController.text
-            : _address2Controller.text,
+            : _emailController.text,
         phoneNumber: _phoneController.text,
         upiId: _upiController.text,
         footerText: _footerController.text,
@@ -188,13 +188,13 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       );
 
       // Persist socials, admin and logo into settingsBox
-      final settings = HiveDatabase.settingsBox;
-      await settings.put('shop_facebook', _facebookController.text);
-      await settings.put('shop_instagram', _instagramController.text);
-      await settings.put('shop_tiktok', _tiktokController.text);
-      await settings.put('shop_whatsapp', _whatsappController.text);
-      await settings.put('shop_admin', _adminController.text);
-      if (_logoPath != null) await settings.put('shop_logo', _logoPath);
+      // final settings = HiveDatabase.settingsBox;
+      // await settings.put('shop_facebook', _facebookController.text);
+      // await settings.put('shop_instagram', _instagramController.text);
+      // await settings.put('shop_tiktok', _tiktokController.text);
+      // await settings.put('shop_whatsapp', _whatsappController.text);
+      // await settings.put('shop_admin', _adminController.text);
+      // if (_logoPath != null) await settings.put('shop_logo', _logoPath);
 
       context.read<ShopBloc>().add(UpdateShopEvent(shop));
     }
@@ -444,32 +444,32 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    const InputLabel(text: 'Social Links'),
-                    const SizedBox(height: 8),
-                    _buildTextField(
-                      controller: _facebookController,
-                      hint: 'Facebook link or handle',
-                      keyboardType: TextInputType.url,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _instagramController,
-                      hint: 'Instagram handle',
-                      keyboardType: TextInputType.url,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _tiktokController,
-                      hint: 'TikTok handle',
-                      keyboardType: TextInputType.url,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _whatsappController,
-                      hint: 'WhatsApp number or link',
-                      keyboardType: TextInputType.phone,
-                    ),
+                    // const SizedBox(height: 15),
+                    // const InputLabel(text: 'Social Links'),
+                    // const SizedBox(height: 8),
+                    // _buildTextField(
+                    //   controller: _facebookController,
+                    //   hint: 'Facebook link or handle',
+                    //   keyboardType: TextInputType.url,
+                    // ),
+                    // const SizedBox(height: 12),
+                    // _buildTextField(
+                    //   controller: _instagramController,
+                    //   hint: 'Instagram handle',
+                    //   keyboardType: TextInputType.url,
+                    // ),
+                    // const SizedBox(height: 12),
+                    // _buildTextField(
+                    //   controller: _tiktokController,
+                    //   hint: 'TikTok handle',
+                    //   keyboardType: TextInputType.url,
+                    // ),
+                    // const SizedBox(height: 12),
+                    // _buildTextField(
+                    //   controller: _whatsappController,
+                    //   hint: 'WhatsApp number or link',
+                    //   keyboardType: TextInputType.phone,
+                    // ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Phone Number'),
                     _buildTextField(
@@ -492,13 +492,14 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                           children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: Text('Payment Settings',
+                              title: Text(
+                                  AppLocalizations.of(context)!.paymentSettings,
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                       color: AppTheme.primaryColor)),
-                              subtitle: const Text(
-                                  'Mobile money numbers used during checkout'),
+                              subtitle: Text(AppLocalizations.of(context)!
+                                  .paymentSettingsSubtitle),
                             ),
                             const Divider(),
                             // MVola

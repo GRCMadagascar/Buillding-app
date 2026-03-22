@@ -170,7 +170,12 @@ class _HomePageState extends State<HomePage> {
                                       : FontWeight.normal,
                                   color: isSelected
                                       ? const Color(0xFF6C63FF)
-                                      : Colors.black,
+                                      : ThemeData.estimateBrightnessForColor(
+                                                  Theme.of(context)
+                                                      .cardColor) ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
                                 )),
                             subtitle: Text("${product.price} MGA"),
                             trailing: isSelected
@@ -260,7 +265,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildScannerSection() {
     return Container(
-      color: Colors.black,
+      color: ThemeData.estimateBrightnessForColor(
+                  Theme.of(context).primaryColor) ==
+              Brightness.dark
+          ? Colors.black
+          : Colors.white,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -320,12 +329,14 @@ class _HomePageState extends State<HomePage> {
                 alignment: Alignment.center,
                 children: [
                   Container(
-                    width: 260,
-                    height: 260,
+                    width: 240,
+                    height: 240,
                     decoration: BoxDecoration(
-                      color: Colors.black26,
+                      color: const Color.fromARGB(66, 99, 0, 106),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white24, width: 2),
+                      border: Border.all(
+                          color: const Color.fromARGB(60, 255, 255, 255),
+                          width: 2),
                     ),
                   ),
                   _buildCorner(Alignment.topLeft),
@@ -499,9 +510,13 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TOTAL IN ARIARY',
+                        Text('TOTAL IN ARIARY',
                             style: TextStyle(
                                 fontSize: 10,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2)),
                         Text(

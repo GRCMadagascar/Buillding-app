@@ -21,14 +21,14 @@ class LanguageCubit extends Cubit<LanguageState> {
 
   LanguageCubit()
       : super(const LanguageState(
-            code: 'en',
-            name: 'English',
-            currencySymbol: '\u0024',
-            locale: Locale('en')));
+            code: 'fr',
+            name: 'Français',
+            currencySymbol: '€',
+            locale: Locale('fr')));
 
   Future<void> loadFromPersistence() async {
     final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_key) ?? 'en';
+    final code = prefs.getString(_key) ?? 'fr';
     switch (code) {
       case 'mg':
         emit(const LanguageState(
@@ -45,11 +45,12 @@ class LanguageCubit extends Cubit<LanguageState> {
             locale: Locale('fr')));
         break;
       default:
+        // Default to French for first-run experience
         emit(const LanguageState(
-            code: 'en',
-            name: 'English',
-            currencySymbol: '\u0024',
-            locale: Locale('en')));
+            code: 'fr',
+            name: 'Français',
+            currencySymbol: '€',
+            locale: Locale('fr')));
     }
   }
 

@@ -30,6 +30,53 @@
     "scannedItems": "Articles scannés",
     "scannedItemsHelp": "Les articles scannés apparaîtront ici au fur et à mesure que vous les scannez avec la caméra ci-dessus."
     ,
+  "printReceipt": "Imprimer le reçu",
     "totalInAriary": "TOTAL EN ARIARY",
     "listIsEmpty": "La liste est vide"
+    ,
+    "openScannerHint": "Appuyez sur l'icône pour ouvrir le scanner de la caméra",
+    "scannerNotImplemented": "Scanner non implémenté",
+    "pleaseEnterBarcode": "Veuillez entrer un code-barres",
+    "pleaseEnterName": "Veuillez entrer un nom",
+    "pleaseEnterPrice": "Veuillez entrer un prix valide",
+    "addProduct": "Ajouter un produit",
+    "addProductButton": "Ajouter",
+  "productBarcodeExists": "Ce code barre {barcode} existe déjà",
+    "noProductsFound": "Aucun produit trouvé. Ajoutez-en!",
+    "noProductsMatch": "Aucun produit ne correspond à votre recherche.",
+    "deleteProductTitle": "Supprimer le produit",
+    "deleteProductConfirm": "Voulez-vous vraiment supprimer {name} ?",
+    "productDeletedSuccess": "Produit supprimé avec succès",
+    "productAddedSuccess": "Produit ajouté avec succès",
+    "productUpdatedSuccess": "Produit mis à jour avec succès",
+    "cameraPermissionRequired": "L'autorisation de la caméra est requise pour scanner les codes-barres.",
+    "openAppSettings": "Ouvrir les paramètres de l'application",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "checkout": "Paiement",
+    "errorOccurred": "Erreur"
+    ,
+    "@productBarcodeExists": {
+      "placeholders": {
+        "barcode": {}
+      }
+    },
+    "@deleteProductConfirm": {
+      "placeholders": { "name": {} }
+    }
+      ,
+      "editProduct": "Modifier le produit",
+      "editBarcode": "Modifier le code-barres",
+      "save": "Enregistrer",
+      "saveChanges": "Enregistrer les modifications",
+      "productName": "Nom du produit",
+      "priceLabel": "Prix"
+    ,
+    "barcodeLabel": "Code-barres"
+  ,
+  "paymentSettings": "Paramètres de paiement",
+  "paymentSettingsSubtitle": "Numéros Mobile Money utilisés lors du paiement",
+  "mvolaNumberLabel": "Numéro MVola",
+  "orangeNumberLabel": "Numéro Orange Money",
+  "airtelNumberLabel": "Numéro Airtel Money"
 }

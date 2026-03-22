@@ -9,6 +9,7 @@ import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
 import 'package:flutter/services.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -58,8 +59,9 @@ class _EditProductPageState extends State<EditProductPage> {
                 size: 32, color: Theme.of(context).primaryColor),
             onPressed: () => context.pop(),
           ),
-          title: const Text('Edit Product',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: Text(AppLocalizations.of(context)!.editProduct,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -89,7 +91,7 @@ class _EditProductPageState extends State<EditProductPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('BARCODE',
+                              Text(AppLocalizations.of(context)!.productName,
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -113,7 +115,8 @@ class _EditProductPageState extends State<EditProductPage> {
                               builder: (ctx) {
                                 String edited = widget.product.barcode;
                                 return AlertDialog(
-                                  title: const Text('Edit Barcode'),
+                                  title: Text(AppLocalizations.of(context)!
+                                      .editBarcode),
                                   content: TextFormField(
                                     initialValue: edited,
                                     keyboardType: TextInputType.text,
@@ -122,11 +125,15 @@ class _EditProductPageState extends State<EditProductPage> {
                                   actions: [
                                     TextButton(
                                         onPressed: () => Navigator.pop(ctx),
-                                        child: const Text('Cancel')),
+                                        child: Text(
+                                            AppLocalizations.of(context)!
+                                                .cancel)),
                                     ElevatedButton(
                                         onPressed: () =>
                                             Navigator.pop(ctx, edited),
-                                        child: const Text('Save')),
+                                        child: Text(
+                                            AppLocalizations.of(context)!
+                                                .save)),
                                   ],
                                 );
                               },
@@ -143,12 +150,13 @@ class _EditProductPageState extends State<EditProductPage> {
                     ),
                   ),
 
-                  const InputLabel(text: 'Product Name'),
+                  InputLabel(text: AppLocalizations.of(context)!.productName),
 
                   TextFormField(
                     initialValue: _name,
                     textCapitalization: TextCapitalization.words,
-                    validator: AppValidators.required('Please enter a name'),
+                    validator: AppValidators.required(
+                        AppLocalizations.of(context)!.pleaseEnterName),
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
@@ -183,8 +191,9 @@ class _EditProductPageState extends State<EditProductPage> {
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Ariary',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(AppLocalizations.of(context)!.totalInAriary,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -196,7 +205,7 @@ class _EditProductPageState extends State<EditProductPage> {
         bottomNavigationBar: PrimaryButton(
           onPressed: _submit,
           icon: Icons.save,
-          label: 'Save Changes',
+          label: AppLocalizations.of(context)!.saveChanges,
         ));
   }
 }

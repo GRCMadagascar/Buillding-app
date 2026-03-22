@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -54,6 +55,33 @@ class _ScannerPageState extends State<ScannerPage>
 
     // Initialize camera and permissions
     _initCamera();
+  }
+
+  Locale? _lastLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // If the app locale changed (e.g., user switched language), ensure the
+    // camera controller is re-initialized. Some platform camera previews may
+    // lose their surface when widgets rebuild during locale changes.
+    final locale = Localizations.localeOf(context);
+    if (_lastLocale == null) {
+      _lastLocale = locale;
+      return;
+    }
+
+    if (locale != _lastLocale) {
+      _lastLocale = locale;
+      // Restart the camera safely after locale change.
+      Future.microtask(() async {
+        try {
+          await controller.stop();
+        } catch (_) {}
+        // Re-request permission and start camera again
+        if (mounted) await _initCamera();
+      });
+    }
   }
 
   Future<void> _initCamera() async {
@@ -126,10 +154,11 @@ class _ScannerPageState extends State<ScannerPage>
                     children: [
                       const Icon(Icons.warning, size: 64, color: Colors.white),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Camera permission is required to scan barcodes.',
+                      Text(
+                        AppLocalizations.of(context)!.cameraPermissionRequired,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
@@ -137,13 +166,14 @@ class _ScannerPageState extends State<ScannerPage>
                           // Open app settings so the user can grant permission
                           await openAppSettings();
                         },
-                        child: const Text('Open App Settings'),
+                        child:
+                            Text(AppLocalizations.of(context)!.openAppSettings),
                       ),
                       const SizedBox(height: 12),
                       TextButton(
                         onPressed: () => _initCamera(),
-                        child: const Text('Retry',
-                            style: TextStyle(color: Colors.white)),
+                        child: Text(AppLocalizations.of(context)!.retry,
+                            style: const TextStyle(color: Colors.white)),
                       ),
                     ],
                   ),

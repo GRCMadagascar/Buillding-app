@@ -72,28 +72,30 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               actions: [
                 PopupMenuButton<String>(
-                  tooltip: AppLocalizations.of(context)?.language ?? 'Language',
+                  tooltip: AppLocalizations.of(context)!.language,
                   icon: const Icon(Icons.language),
                   onSelected: (code) {
-                    try {
-                      context.read<LanguageCubit>().setLanguageCode(code);
-                    } catch (_) {}
+                    // Schedule the language change after the current frame to
+                    // avoid triggering state updates during build which can
+                    // cause UI jank or temporary locking.
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      try {
+                        context.read<LanguageCubit>().setLanguageCode(code);
+                      } catch (_) {}
+                    });
                   },
                   itemBuilder: (ctx) => [
                     PopupMenuItem(
                       value: 'mg',
-                      child: Text(AppLocalizations.of(ctx)?.malagasyLabel ??
-                          'Malagasy (MGA / Ar)'),
+                      child: Text(AppLocalizations.of(ctx)!.malagasyLabel),
                     ),
                     PopupMenuItem(
                       value: 'fr',
-                      child: Text(AppLocalizations.of(ctx)?.frenchLabel ??
-                          'Français (EUR / €)'),
+                      child: Text(AppLocalizations.of(ctx)!.frenchLabel),
                     ),
                     PopupMenuItem(
                       value: 'en',
-                      child: Text(AppLocalizations.of(ctx)?.englishLabel ??
-                          'English (USD / \$)'),
+                      child: Text(AppLocalizations.of(ctx)!.englishLabel),
                     ),
                   ],
                 ),
@@ -121,17 +123,29 @@ class _SettingsPageState extends State<SettingsPage> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: _coverImage != null
-                                  ? Image.file(
-                                      File(_coverImage!.path),
-                                      height: 152,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                                  ? ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(16),
+                                        topRight: Radius.circular(16),
+                                      ),
+                                      child: Image.file(
+                                        File(_coverImage!.path),
+                                        height: 152,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
                                     )
-                                  : Image.asset(
-                                      'assets/Fond.jpg',
-                                      height: 152,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                                  : ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(16),
+                                        topRight: Radius.circular(16),
+                                      ),
+                                      child: Image.asset(
+                                        'assets/Fond.jpg',
+                                        height: 152,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                             ),
                           ),
@@ -396,15 +410,20 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: 'Print Device',
                             subtitleWidget: Row(
                               children: [
-                                Text(
-                                  state.connectedMac != null
-                                      ? (state.connectedName ??
-                                          AppLocalizations.of(context)!
-                                              .printerConnected)
-                                      : AppLocalizations.of(context)!
-                                          .noPrinterConnected,
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.grey[500]),
+                                // Make the status text flexible so long localized
+                                // strings (e.g., Malagasy) don't overflow the row.
+                                Expanded(
+                                  child: Text(
+                                    state.connectedMac != null
+                                        ? (state.connectedName ??
+                                            AppLocalizations.of(context)!
+                                                .printerConnected)
+                                        : AppLocalizations.of(context)!
+                                            .noPrinterConnected,
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[500]),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 if (state.connectedMac != null) ...[
                                   const SizedBox(width: 8),
@@ -583,12 +602,20 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           child: Icon(icon, color: AppTheme.primaryColor, size: 20),
         ),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
         subtitle: subtitleWidget ??
             (subtitle != null
-                ? Text(subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                ? Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  )
                 : null),
         trailing: trailingWidget ??
             (trailingIcon != null

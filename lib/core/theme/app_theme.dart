@@ -13,7 +13,7 @@ class AppTheme {
     bodyLarge: GoogleFonts.ibmPlexSans(
       fontSize: 15,
       fontWeight: FontWeight.w500,
-      color: Colors.black,
+      color: const Color.fromARGB(255, 17, 0, 23),
     ),
   );
   static ThemeData get lightTheme {
@@ -33,7 +33,7 @@ class AppTheme {
         error: errorColor,
       ),
       textTheme: textTheme.apply(
-        bodyColor: Colors.black87,
+        bodyColor: const Color.fromARGB(221, 11, 0, 18),
         displayColor: Colors.black,
       ),
       appBarTheme: AppBarTheme(

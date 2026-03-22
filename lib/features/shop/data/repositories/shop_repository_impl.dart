@@ -17,16 +17,17 @@ class ShopRepositoryImpl implements ShopRepository {
         return Right(shop);
       } else {
         // Return default shop if not found
-    return const Right(Shop(
-      name: 'Dinesh Shop',
-      addressLine1: 'Samrajpet, Mecheri',
-      addressLine2: 'Salem - 636453',
-      phoneNumber: '+917010674588',
-      upiId: 'dineshsowndar@oksbi',
-      footerText: 'Thank you, Visit again!!!',
-      mvolaNumber: '0383664786',
-      orangeMoneyNumber: '0372177785',
-      airtelMoneyNumber: '0332177785'));
+        return const Right(Shop(
+            name: '',
+            addressLine1: '',
+            email: '',
+            phoneNumber: '',
+            upiId: '',
+            footerText:
+                'Misaotra betsaka anao nisafidy ny app "GRC POS SYSTEM" by Ranto Nandrianina',
+            mvolaNumber: '',
+            orangeMoneyNumber: '',
+            airtelMoneyNumber: ''));
       }
     } catch (e) {
       return Left(CacheFailure(e.toString()));

@@ -15,7 +15,7 @@ class ShopModel extends Shop {
   final String addressLine1;
   @override
   @HiveField(2)
-  final String addressLine2;
+  final String email;
   @override
   @HiveField(3)
   final String phoneNumber;
@@ -44,7 +44,7 @@ class ShopModel extends Shop {
   const ShopModel({
     this.name = '',
     this.addressLine1 = '',
-    this.addressLine2 = '',
+    this.email = '',
     this.phoneNumber = '',
     this.upiId = '',
     this.footerText = '',
@@ -57,7 +57,7 @@ class ShopModel extends Shop {
         super(
           name: name,
           addressLine1: addressLine1,
-          addressLine2: addressLine2,
+          email: email,
           phoneNumber: phoneNumber,
           upiId: upiId,
           footerText: footerText,
@@ -70,7 +70,7 @@ class ShopModel extends Shop {
     return ShopModel(
       name: shop.name,
       addressLine1: shop.addressLine1,
-      addressLine2: shop.addressLine2,
+      email: shop.email,
       phoneNumber: shop.phoneNumber,
       upiId: shop.upiId,
       footerText: shop.footerText,

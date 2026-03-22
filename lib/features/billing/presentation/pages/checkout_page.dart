@@ -11,8 +11,8 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../bloc/billing_bloc.dart';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:billing_app/core/utils/snackbar_helper.dart' as sbh;
+import 'package:billing_app/l10n/app_localizations.dart';
+// snackbar_helper removed; use ScaffoldMessenger or central helper when needed.
 
 enum Operator { mvola, orange, airtel }
 
@@ -103,29 +103,10 @@ class _CheckoutPageState extends State<CheckoutPage>
     return 'tel:$encoded';
   }
 
-  Future<void> _launchUSSD(ShopState shopState, double amount) async {
-    final phone = _operatorPhone(shopState);
-    if (phone.isEmpty || _selectedOperator == null) {
-      sbh.showAppSnackBar('Operator phone not configured', isError: true);
-      return;
-    }
-
-    final uriString = _buildQrData(phone, amount);
-    if (uriString.isEmpty) {
-      sbh.showAppSnackBar('Unable to build USSD', isError: true);
-      return;
-    }
-
-    final uri = Uri.parse(uriString);
-    try {
-      if (!await launchUrl(uri)) {
-        sbh.showAppSnackBar('Could not open dialer', isError: true);
-      }
-    } catch (e) {
-      sbh.showAppSnackBar('Failed to launch dialer: ${e.toString()}',
-          isError: true);
-    }
-  }
+  // USSD/dialer helper removed — dialing should not be triggered from
+  // the Checkout print flow. If you need a separate payment action that
+  // launches the dialer, implement it as its own user action and call the
+  // appropriate platform APIs from there.
 
   @override
   void initState() {
@@ -256,8 +237,9 @@ class _CheckoutPageState extends State<CheckoutPage>
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Checkout',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            title: Text(AppLocalizations.of(context)!.checkout,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -604,17 +586,13 @@ class _CheckoutPageState extends State<CheckoutPage>
                                   return;
                                 }
 
-                                // If an operator is selected, initiate USSD dial before printing
-                                if (_selectedOperator != null) {
-                                  await _launchUSSD(
-                                      shopState, billingState.totalAmount);
-                                }
-
+                                // Only print the receipt here. Do NOT initiate any USSD or
+                                // dialer actions from the Print button.
                                 context.read<BillingBloc>().add(
                                       PrintReceiptEvent(
                                         shopName: shopState.shop.name,
                                         address1: shopState.shop.addressLine1,
-                                        address2: shopState.shop.addressLine2,
+                                        email: shopState.shop.email,
                                         phone: shopState.shop.phoneNumber,
                                         amountReceived: _amountReceived,
                                         change: _change,
@@ -631,7 +609,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                 );
                               }
                             },
-                            label: 'Print Receipt',
+                            label: AppLocalizations.of(context)!.printReceipt,
                             icon: Icons.print,
                             isLoading: billingState.isPrinting,
                           ),

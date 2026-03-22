@@ -47,7 +47,8 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       (_) {
         emit(state.copyWith(
             status: ProductStatus.success,
-            message: 'Product added successfully'));
+            // Emit localization key; UI maps this to localized message
+            message: 'productAddedSuccess'));
         add(LoadProducts());
       },
     );
@@ -62,8 +63,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           status: ProductStatus.error, message: failure.message)),
       (_) {
         emit(state.copyWith(
-            status: ProductStatus.success,
-            message: 'Product updated successfully'));
+            status: ProductStatus.success, message: 'productUpdatedSuccess'));
         add(LoadProducts());
       },
     );
@@ -78,8 +78,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           status: ProductStatus.error, message: failure.message)),
       (_) {
         emit(state.copyWith(
-            status: ProductStatus.success,
-            message: 'Product deleted successfully'));
+            status: ProductStatus.success, message: 'productDeletedSuccess'));
         add(LoadProducts());
       },
     );

@@ -121,7 +121,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       await printerHelper.printReceipt(
         shopName: event.shopName,
         address1: event.address1,
-        address2: event.address2,
+        email: event.email,
         phone: event.phone,
         items: items,
         total: state.totalAmount,

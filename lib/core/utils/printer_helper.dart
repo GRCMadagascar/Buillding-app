@@ -83,7 +83,7 @@ class PrinterHelper {
   Future<void> printReceipt({
     required String shopName,
     required String address1,
-    required String address2,
+    required String email,
     required String phone,
     required List<Map<String, dynamic>> items,
     required double total,
@@ -111,7 +111,7 @@ class PrinterHelper {
     List<int> bytes = [];
     bytes += EscPos.init;
 
-    // Header: logo (if available as filename), shop name, phone, email(address2), address
+    // Header: logo (if available as filename), shop name, phone, email(email), address
     bytes += EscPos.alignCenter;
     if (logoPath != null && logoPath.isNotEmpty) {
       // We can't reliably print images across all printers here; print logo filename as placeholder
@@ -129,8 +129,8 @@ class PrinterHelper {
       bytes += _textToBytes('Tel: $phone');
       bytes += EscPos.lineFeed;
     }
-    if (address2.isNotEmpty) {
-      bytes += _textToBytes('Email: $address2');
+    if (email.isNotEmpty) {
+      bytes += _textToBytes('Email: $email');
       bytes += EscPos.lineFeed;
     }
     if (address1.isNotEmpty) {
@@ -164,9 +164,9 @@ class PrinterHelper {
 
     // Table header
     bytes += EscPos.alignLeft;
-    bytes += _textToBytes('Produit          Price     Total');
+    bytes += _textToBytes('Produit          Price         Total');
     bytes += EscPos.lineFeed;
-    bytes += _textToBytes('--------------------------------');
+    bytes += _textToBytes('------------------------------------');
     bytes += EscPos.lineFeed;
 
     // Items
