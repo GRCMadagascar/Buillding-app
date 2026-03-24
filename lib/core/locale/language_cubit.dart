@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageState {
-  final String code; // 'mg', 'fr', 'en'
+  final String code; // 'mg', 'fr',
   final String name;
   final String currencySymbol;
   final Locale locale;
@@ -23,7 +23,7 @@ class LanguageCubit extends Cubit<LanguageState> {
       : super(const LanguageState(
             code: 'fr',
             name: 'Français',
-            currencySymbol: '€',
+            currencySymbol: 'Ar',
             locale: Locale('fr')));
 
   Future<void> loadFromPersistence() async {
@@ -41,7 +41,7 @@ class LanguageCubit extends Cubit<LanguageState> {
         emit(const LanguageState(
             code: 'fr',
             name: 'Français',
-            currencySymbol: '€',
+            currencySymbol: 'Ar',
             locale: Locale('fr')));
         break;
       default:
@@ -49,7 +49,7 @@ class LanguageCubit extends Cubit<LanguageState> {
         emit(const LanguageState(
             code: 'fr',
             name: 'Français',
-            currencySymbol: '€',
+            currencySymbol: 'Ar',
             locale: Locale('fr')));
     }
   }

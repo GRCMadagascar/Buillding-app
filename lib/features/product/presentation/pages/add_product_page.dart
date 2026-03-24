@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
 
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
@@ -25,11 +24,39 @@ class _AddProductPageState extends State<AddProductPage> {
   double _price = 0.0;
 
   void _scanBarcode() async {
-    final result = await context.push<String>('/scanner');
+    // Ensure any focused text fields are unfocused first so the push is
+    // reliably handled on the first tap.
+    FocusScope.of(context).unfocus();
+    // Small delay to let the focus change propagate on some devices and to
+    // ensure the keyboard has time to dismiss. 150ms is a conservative
+    // value that works reliably on slower devices; if you notice it feels
+    // too slow we can reduce it to ~80-100ms.
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    // Use a post-frame callback to ensure navigation happens after the
+    // current UI update (defensive on some platforms where focus/unfocus
+    // completes on the next frame).
+    String? result;
+    await Future<void>.delayed(Duration.zero);
+    result = await context.push<String>('/scanner');
     if (result != null && result.isNotEmpty) {
       setState(() {
-        _barcode = result;
+        // Trim whitespace and assign the scanned value (works for both
+        // QR codes and barcodes).
+        _barcode = result!.trim();
       });
+      // Provide quick visual feedback for a successful scan.
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text('Scan réussi')),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(milliseconds: 1100),
+      ));
     }
   }
 
@@ -42,8 +69,7 @@ class _AddProductPageState extends State<AddProductPage> {
           productState.products.where((p) => p.barcode == _barcode).firstOrNull;
 
       if (existingProduct != null) {
-        final msg =
-            AppLocalizations.of(context)!.productBarcodeExists(_barcode);
+        final msg = 'Produit avec le code-barres "$_barcode" existe déjà !';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(msg),
@@ -76,9 +102,8 @@ class _AddProductPageState extends State<AddProductPage> {
                 size: 28, color: Theme.of(context).primaryColor),
             onPressed: () => context.pop(),
           ),
-          title: Text(AppLocalizations.of(context)!.addProduct,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: const Text('Ajouter un Produit',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -89,7 +114,7 @@ class _AddProductPageState extends State<AddProductPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  InputLabel(text: AppLocalizations.of(context)!.barcodeLabel),
+                  const InputLabel(text: 'Code-barres'),
                   Row(
                     children: [
                       Expanded(
@@ -97,21 +122,23 @@ class _AddProductPageState extends State<AddProductPage> {
                           key: ValueKey(_barcode),
                           initialValue: _barcode,
                           decoration: const InputDecoration(
-                            hintText: 'Scan or enter barcode',
+                            hintText: 'Scanner ou entrer le code-barres',
                           ),
-                          validator:
-                              AppValidators.required('Please enter a barcode'),
+                          validator: AppValidators.required(
+                              'Veuillez entrer un code-barres'),
                           onSaved: (value) => _barcode = value!,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner,
+                          // Use a more general camera icon to reflect support for
+                          // both QR codes and traditional barcodes.
+                          icon: const Icon(Icons.camera_alt,
                               color: AppTheme.primaryColor),
                           onPressed: _scanBarcode,
                           padding: const EdgeInsets.all(14),
@@ -120,24 +147,20 @@ class _AddProductPageState extends State<AddProductPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(AppLocalizations.of(context)!.openScannerHint,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF4C669A))),
+                  const Text('Appuyez sur l\'icône pour ouvrir le scanner',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
                   const SizedBox(height: 24),
-                  InputLabel(
-                      text: AppLocalizations.of(context)!.pleaseEnterName),
+                  const InputLabel(text: 'Veuillez entrer un nom'),
                   TextFormField(
                     decoration: const InputDecoration(
                       hintText: 'Ranto Rice',
                     ),
                     textCapitalization: TextCapitalization.words,
-                    validator: AppValidators.required(
-                        AppLocalizations.of(context)!.pleaseEnterName),
+                    validator: AppValidators.required('Veuillez entrer un nom'),
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
-                  InputLabel(
-                      text: AppLocalizations.of(context)!.pleaseEnterPrice),
+                  const InputLabel(text: 'Veuillez entrer un prix'),
                   TextFormField(
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
@@ -156,10 +179,10 @@ class _AddProductPageState extends State<AddProductPage> {
                         fontWeight: FontWeight.w600,
                         color: (Theme.of(context).textTheme.bodySmall?.color ??
                                 Colors.black)
-                            .withOpacity(0.8),
+                            .withValues(alpha: 0.8),
                       ),
-                      // remove any prefix so the unit sits on the right
                     ),
+                    // remove any prefix so the unit sits on the right
                     validator: AppValidators.price,
                     onSaved: (value) =>
                         _price = double.parse(value!.replaceAll(',', '')),
@@ -172,7 +195,7 @@ class _AddProductPageState extends State<AddProductPage> {
         bottomNavigationBar: PrimaryButton(
           onPressed: _submit,
           icon: Icons.add_circle,
-          label: AppLocalizations.of(context)!.addProductButton,
+          label: 'Ajouter',
         ));
   }
 }

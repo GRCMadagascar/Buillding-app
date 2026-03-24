@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../settings/presentation/bloc/settings_event.dart';
@@ -20,6 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   Timer? _timer;
   bool _navigated = false;
+  bool _lottieScheduled = false;
 
   @override
   void initState() {
@@ -51,10 +52,8 @@ class _SplashScreenState extends State<SplashScreen>
         }
       } catch (_) {}
 
-      // Wait a minimum of 3 seconds so the splash is visible
-      _timer = Timer(const Duration(seconds: 3), () {
-        _goToHome();
-      });
+      // We'll navigate when the Lottie animation finishes. The Lottie widget
+      // will schedule the navigation via the onLoaded callback.
     });
   }
 
@@ -77,62 +76,41 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Check whether AppLocalizations is ready. We avoid accessing generated
-    // getters here because gen-l10n may not have been run in the workspace yet.
-    if (AppLocalizations.of(context) == null) {
-      // Localizations not available yet; fall back to English literals below.
-    }
-    final appName = 'GRC POS System';
-    final copyright = '© ranto nandrianina 2026';
+    // Localization removed — using hardcoded French and fixed app name below.
+    const appName = 'GRC POS System';
+    const copyright = '© ranto nandrianina 2026';
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background image
-            Positioned.fill(
-              child: Image.asset(
-                'assets/fond_splash.png',
-                fit: BoxFit.cover,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Lottie animation centered. When loaded, schedule navigation
+              // to home after the animation duration.
+              Lottie.asset(
+                'assets/splash_screen.json',
+                width: 260,
+                height: 260,
+                fit: BoxFit.contain,
+                repeat: false,
+                onLoaded: (composition) {
+                  if (_lottieScheduled) return;
+                  _lottieScheduled = true;
+                  _timer?.cancel();
+                  _timer = Timer(composition.duration, () {
+                    _goToHome();
+                  });
+                },
               ),
-            ),
-
-            // Centered logo + app name
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/grc_logo.png',
-                    height: 120,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    appName,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Bottom copyright
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 16,
-              child: Center(
-                child: Text(
-                  copyright,
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              const Text(appName,
+                  style: TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text(copyright, style: TextStyle(fontSize: 12)),
+            ],
+          ),
         ),
       ),
     );

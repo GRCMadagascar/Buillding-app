@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../../core/utils/app_validators.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
@@ -36,17 +36,15 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _scanQR(List<Product> products) {
-    // Placeholder: replace with real scanner navigation.
+    // Placeholder: open scanner route or show a message
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(AppLocalizations.of(context)!.scannerNotImplemented)),
+      const SnackBar(content: Text('Scanner non implémenté')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final borderColor = Theme.of(context).dividerColor;
-    final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -67,20 +65,21 @@ class _ProductListPageState extends State<ProductListPage> {
                               controller: _searchController,
                               textCapitalization: TextCapitalization.words,
                               decoration: InputDecoration(
-                                hintText: 'Scan or enter barcode',
+                                hintText: 'Scannez ou entrez le code-barres',
                                 prefixIcon: Icon(
                                   Icons.search,
                                   color: Colors.grey[400],
                                 ),
                               ),
                               validator: AppValidators.required(
-                                  'Please enter a barcode'),
+                                  'Veuillez saisir un code-barres'),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Container(
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.05),
+                              color:
+                                  AppTheme.primaryColor.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
@@ -93,8 +92,8 @@ class _ProductListPageState extends State<ProductListPage> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(loc.openScannerHint,
-                          style: const TextStyle(
+                      const Text("Appuyez sur l'icône pour ouvrir le scanner",
+                          style: TextStyle(
                               fontSize: 12, color: Color(0xFF4C669A))),
                     ],
                   );
@@ -107,18 +106,15 @@ class _ProductListPageState extends State<ProductListPage> {
               child: BlocConsumer<ProductBloc, ProductState>(
                 listener: (context, state) {
                   if (state.message != null) {
-                    final loc = AppLocalizations.of(context)!;
                     String message = state.message!;
-                    // map known message keys to localized strings
                     if (message == 'productAddedSuccess') {
-                      message = loc.productAddedSuccess;
+                      message = 'Produit ajouté avec succès';
                     } else if (message == 'productUpdatedSuccess') {
-                      message = loc.productUpdatedSuccess;
+                      message = 'Produit mis à jour avec succès';
                     } else if (message == 'productDeletedSuccess') {
-                      message = loc.productDeletedSuccess;
+                      message = 'Produit supprimé avec succès';
                     } else if (state.status == ProductStatus.error) {
-                      // for error states, prefix with a localized label
-                      message = '${loc.errorOccurred}: ${state.message}';
+                      message = 'Erreur survenue: ${state.message}';
                     }
 
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -140,10 +136,10 @@ class _ProductListPageState extends State<ProductListPage> {
                   if (state.products.isEmpty) {
                     if (state.status == ProductStatus.error) {
                       return Center(
-                          child:
-                              Text('${loc.errorOccurred}: ${state.message}'));
+                          child: Text('Erreur survenue: ${state.message}'));
                     }
-                    return Center(child: Text(loc.noProductsFound));
+                    return const Center(
+                        child: Text("Aucun produit trouvé. Ajoutez-en !"));
                   }
 
                   final filteredProducts = state.products
@@ -153,7 +149,9 @@ class _ProductListPageState extends State<ProductListPage> {
                       .toList();
 
                   if (filteredProducts.isEmpty) {
-                    return Center(child: Text(loc.noProductsMatch));
+                    return const Center(
+                        child: Text(
+                            "Aucun produit ne correspond à votre recherche."));
                   }
 
                   return ListView.separated(
@@ -180,33 +178,46 @@ class _ProductListPageState extends State<ProductListPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    product.name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16),
+                            // Leading avatar + product info (avatar wrapped in Hero for smooth transition)
+                            Row(
+                              children: [
+                                Hero(
+                                  tag: product.id,
+                                  child: CircleAvatar(
+                                    backgroundColor: AppTheme.primaryColor
+                                        .withValues(alpha: 0.1),
+                                    child: Text(product.name.isNotEmpty
+                                        ? product.name[0].toUpperCase()
+                                        : '?'),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${formatMGA(product.price)} Ar',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.grey[600]),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(product.name,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16)),
+                                      const SizedBox(height: 4),
+                                      Text('${formatMGA(product.price)} Ar',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.grey[600])),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
                                   decoration: BoxDecoration(
-                                    color:
-                                        AppTheme.primaryColor.withOpacity(0.1),
+                                    color: AppTheme.primaryColor
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: IconButton(
@@ -224,7 +235,7 @@ class _ProductListPageState extends State<ProductListPage> {
                                 const SizedBox(width: 8),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: IconButton(
@@ -262,109 +273,63 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _confirmDelete(BuildContext context, Product product) {
-    final loc = AppLocalizations.of(context)!;
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: loc.deleteProductTitle,
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 260),
-      pageBuilder: (ctx, animation, secondaryAnimation) {
-        return Center(
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.86,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).dialogBackgroundColor,
-                borderRadius: BorderRadius.circular(16),
+      backgroundColor: Theme.of(context).canvasColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 6),
+              Container(
+                width: 48,
+                height: 6,
+                decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(3)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 12),
+              Text('Supprimer le produit',
+                  style: TextStyle(
+                      color: Colors.red[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Êtes-vous sûr de vouloir supprimer ${product.name}?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontSize: 15)),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Illustration (add `assets/delete_illustration.png` to your assets)
-                  Image.asset(
-                    'assets/delete_illustration.png',
-                    height: 100,
-                    fit: BoxFit.contain,
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Annuler'),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    loc.deleteProductTitle,
-                    style: const TextStyle(
-                        color: Color(0xFFD32F2F),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      context
+                          .read<ProductBloc>()
+                          .add(DeleteProduct(product.id));
+                      Navigator.of(ctx).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[700]),
+                    child: const Text('Supprimer'),
                   ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color ??
-                            Colors.black,
-                        fontSize: 15,
-                      ),
-                      children: [
-                        TextSpan(text: loc.deleteProductConfirm(product.name)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Cancel button: transparent bg, violet border, violet text, X icon
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        icon: const Icon(Icons.close,
-                            color: AppTheme.primaryColor),
-                        label: Text(loc.cancel,
-                            style:
-                                const TextStyle(color: AppTheme.primaryColor)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.primaryColor),
-                          backgroundColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Delete button: solid violet background, white text, trash icon
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // trigger delete event
-                          context
-                              .read<ProductBloc>()
-                              .add(DeleteProduct(product.id));
-                          Navigator.of(ctx).pop();
-                        },
-                        icon: const Icon(Icons.delete, color: Colors.white),
-                        label: Text(loc.deleteProductTitle,
-                            style: const TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ],
-                  )
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+            ],
           ),
-        );
-      },
-      transitionBuilder: (ctx, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: child,
         );
       },
     );

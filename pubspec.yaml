@@ -10,9 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  flutter_localizations:
-    sdk: flutter
-  
+  # flutter_localizations removed (project uses hardcoded French strings)
   # State Management & DI
   flutter_bloc: ^8.1.5
   get_it: ^7.6.7
@@ -49,16 +47,15 @@ dependencies:
   uuid: ^4.5.2
   app_settings: ^7.0.0
   url_launcher: ^6.1.11
-  flutter_gen: ^5.9.0
+  # removed flutter_gen - we are hardcoding French strings
+  lottie: ^2.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: "^0.13.1"  # Nampiana elanelana 2 eto mba hitovy amin'ny ambony
-  flutter_localizations: 
-    sdk: flutter
-  intl: ^0.20.2
+  # flutter_localizations removed from dev_dependencies
 
     
   # Code Generation
@@ -68,7 +65,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  generate: true
+  # generate: true  <-- removed to avoid gen-l10n generation (we use hardcoded French)
 
   # Ity ampahany ity no mampiditra ny sary sy ny logo-nao
   assets:
@@ -78,6 +75,7 @@ flutter:
     - assets/orange_logo.png
     - assets/airtel_logo.png
     - assets/delete_illustration.png
+    - assets/splash_screen.json
 
  # Iny andalana 65 iny akisaka kely miankavia indrindra
 flutter_launcher_icons:

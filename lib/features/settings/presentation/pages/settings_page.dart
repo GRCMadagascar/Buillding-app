@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_settings/app_settings.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+// Localization removed — using hardcoded French strings in this app.
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
@@ -24,15 +24,275 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   XFile? _coverImage;
   XFile? _profileImage;
+  late final AnimationController _shimmerController;
+  late final Animation<double> _shimmerAnim;
+  late final AnimationController _ctaController;
+  late final Animation<double> _ctaScale;
   @override
   void initState() {
     super.initState();
     // Re-initialize printer state whenever settings page opens
     context.read<PrinterBloc>().add(InitPrinterEvent());
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+    _shimmerAnim = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
+    );
+
+    _ctaController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _ctaScale = TweenSequence<double>([
+      TweenSequenceItem(
+          tween: Tween(begin: 1.0, end: 1.06)
+              .chain(CurveTween(curve: Curves.easeOut)),
+          weight: 50),
+      TweenSequenceItem(
+          tween: Tween(begin: 1.06, end: 1.0)
+              .chain(CurveTween(curve: Curves.easeIn)),
+          weight: 50),
+    ]).animate(_ctaController);
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    _ctaController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildPremiumCard() {
+    const gold1 = Color(0xFFD4AF37);
+    const gold2 = Color(0xFFF9F06B);
+    const gold3 = Color(0xFFB8860B);
+
+    return GestureDetector(
+      onTap: _showProSheet,
+      child: AnimatedBuilder(
+        animation: _shimmerController,
+        builder: (context, child) {
+          return LayoutBuilder(builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final shimmerX = _shimmerAnim.value * w;
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                children: [
+                  Container(
+                    height: 92,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [gold1, gold2, gold3],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.emoji_events,
+                              color: Colors.white, size: 30),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Passer à la Version PRO',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              SizedBox(height: 4),
+                              Text('Avantages exclusifs',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.white70),
+                      ],
+                    ),
+                  ),
+
+                  // Shimmer streak
+                  Positioned(
+                    left: shimmerX - (w * 0.35),
+                    top: 0,
+                    bottom: 0,
+                    child: Transform.rotate(
+                      angle: -0.2,
+                      child: Container(
+                        width: w * 0.35,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.0),
+                                Colors.white.withValues(alpha: 0.75),
+                                Colors.white.withValues(alpha: 0.0),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  void _showProSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return GestureDetector(
+          onTap: () {},
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF111215),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 40),
+                        Text('GRC POS PRO',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFD4AF37),
+                              shadows: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.6),
+                                    offset: const Offset(2, 2),
+                                    blurRadius: 6),
+                                const BoxShadow(
+                                    color: Colors.white24,
+                                    offset: Offset(-1, -1),
+                                    blurRadius: 1),
+                              ],
+                            )),
+                        IconButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          icon: const Icon(Icons.close, color: Colors.white),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Fonctionnalités PRO',
+                        style: TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        children: const [
+                          ListTile(
+                            leading: Icon(Icons.check_circle,
+                                color: Color(0xFFD4AF37)),
+                            title: Text('Historique illimité',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.check_circle,
+                                color: Color(0xFFD4AF37)),
+                            title: Text('Rapports PDF',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.check_circle,
+                                color: Color(0xFFD4AF37)),
+                            title: Text('Cloud Sync',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.check_circle,
+                                color: Color(0xFFD4AF37)),
+                            title: Text('Bluetooth illimité',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // CTA with pulse animation
+                    AnimatedBuilder(
+                      animation: _ctaController,
+                      builder: (context, child) {
+                        final scale = 1 + (_ctaController.value * 0.06);
+                        return Transform.scale(
+                          scale: scale,
+                          child: SizedBox(
+                            height: 54,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD4AF37),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () {
+                                // local feedback pulse
+                                _ctaController.forward(from: 0.0);
+                              },
+                              child: const Text('Bientôt disponible',
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -59,9 +319,8 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(AppLocalizations.of(context)!.settings,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18)),
+              title: const Text('Paramètres',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               centerTitle: true,
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -72,30 +331,27 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               actions: [
                 PopupMenuButton<String>(
-                  tooltip: AppLocalizations.of(context)!.language,
+                  tooltip: 'Langue',
                   icon: const Icon(Icons.language),
                   onSelected: (code) {
-                    // Schedule the language change after the current frame to
-                    // avoid triggering state updates during build which can
-                    // cause UI jank or temporary locking.
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       try {
                         context.read<LanguageCubit>().setLanguageCode(code);
                       } catch (_) {}
                     });
                   },
-                  itemBuilder: (ctx) => [
+                  itemBuilder: (ctx) => const [
                     PopupMenuItem(
                       value: 'mg',
-                      child: Text(AppLocalizations.of(ctx)!.malagasyLabel),
+                      child: Text('🇲🇬  Malagasy (MGA / Ar)'),
                     ),
                     PopupMenuItem(
                       value: 'fr',
-                      child: Text(AppLocalizations.of(ctx)!.frenchLabel),
+                      child: Text('🇫🇷  Français (EUR / €)'),
                     ),
                     PopupMenuItem(
                       value: 'en',
-                      child: Text(AppLocalizations.of(ctx)!.englishLabel),
+                      child: Text('🇬🇧  English (USD / \$)'),
                     ),
                   ],
                 ),
@@ -158,11 +414,11 @@ class _SettingsPageState extends State<SettingsPage> {
                               width: 34,
                               height: 34,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -218,7 +474,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.03),
+                                                        .withValues(
+                                                            alpha: 0.03),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 4),
                                                   ),
@@ -247,7 +504,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.08),
+                                                        .withValues(
+                                                            alpha: 0.08),
                                                     blurRadius: 12,
                                                     offset: const Offset(0, 6),
                                                   ),
@@ -289,12 +547,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                               height: 34,
                                               decoration: BoxDecoration(
                                                 color: Colors.white
-                                                    .withOpacity(0.8),
+                                                    .withValues(alpha: 0.8),
                                                 shape: BoxShape.circle,
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withOpacity(0.08),
+                                                        .withValues(
+                                                            alpha: 0.08),
                                                     blurRadius: 6,
                                                     offset: const Offset(0, 2),
                                                   ),
@@ -337,7 +596,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                         boxShadow: [
                                           BoxShadow(
                                             color: AppTheme.primaryColor
-                                                .withOpacity(0.12),
+                                                .withValues(alpha: 0.12),
                                             blurRadius: 12,
                                             offset: const Offset(0, 6),
                                           )
@@ -364,22 +623,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 24),
 
                   // Management Section
-                  _buildSectionHeader(AppLocalizations.of(context)!.management),
+                  _buildSectionHeader('Gestion'),
                   _buildListGroup(
                     children: [
                       _buildListItem(
                         icon: Icons.qr_code_scanner,
-                        title: AppLocalizations.of(context)!.products,
-                        subtitle: AppLocalizations.of(context)!
-                            .manageStockAndBarcodes,
+                        title: 'Produits',
+                        subtitle: 'Gérer le stock et les codes-barres',
                         onTap: () => context.push('/products'),
                       ),
                       _buildDivider(),
                       _buildListItem(
+                        icon: Icons.history,
+                        title: 'Historique des Ventes',
+                        subtitle: 'Voir les ventes récentes (30 dernières)',
+                        onTap: () => context.push('/sales_history'),
+                      ),
+                      _buildDivider(),
+                      _buildListItem(
                         icon: Icons.storefront,
-                        title: AppLocalizations.of(context)!.shopDetails,
-                        subtitle: AppLocalizations.of(context)!
-                            .editBusinessInfoAndAddress,
+                        title: 'Détails du magasin',
+                        subtitle:
+                            'Modifier les informations et l\'adresse de l\'entreprise',
                         onTap: () => context.push('/shop'),
                       ),
                     ],
@@ -388,7 +653,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 24),
 
                   // Hardware Section
-                  _buildSectionHeader(AppLocalizations.of(context)!.hardware),
+                  _buildSectionHeader('Matériel'),
                   BlocConsumer<PrinterBloc, PrinterState>(
                     listener: (context, state) {
                       if (state.errorMessage != null) {
@@ -396,9 +661,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             content: Text(state.errorMessage!),
                             backgroundColor: Colors.red));
                       } else if (state.status == PrinterStatus.connected) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(AppLocalizations.of(context)!
-                                .connectedToPrinter),
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text("Connecté à l'imprimante"),
                             backgroundColor: Colors.green));
                       }
                     },
@@ -407,7 +671,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _buildListItem(
                             icon: Icons.print,
-                            title: 'Print Device',
+                            title: 'Imprimante',
                             subtitleWidget: Row(
                               children: [
                                 // Make the status text flexible so long localized
@@ -416,10 +680,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                   child: Text(
                                     state.connectedMac != null
                                         ? (state.connectedName ??
-                                            AppLocalizations.of(context)!
-                                                .printerConnected)
-                                        : AppLocalizations.of(context)!
-                                            .noPrinterConnected,
+                                            'Imprimante connectée')
+                                        : 'Aucune imprimante connectée',
                                     style: TextStyle(
                                         fontSize: 12, color: Colors.grey[500]),
                                     overflow: TextOverflow.ellipsis,
@@ -436,7 +698,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                         border: Border.all(
                                             color: Colors.teal[200]!)),
                                     child: Text(
-                                      AppLocalizations.of(context)!.connected,
+                                      'CONNECTÉ',
                                       style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,
@@ -484,7 +746,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
                     child: Text(
-                      AppLocalizations.of(context)!.connectDeviceInstructions,
+                      "Pour connecter un nouvel appareil, ouvrez les paramètres Bluetooth du téléphone, puis revenez et appuyez sur Actualiser.",
                       style: TextStyle(
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
@@ -495,7 +757,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 16),
 
                   // Appearance / Dark Mode
-                  _buildSectionHeader(AppLocalizations.of(context)!.appearance),
+                  _buildSectionHeader('Apparence'),
                   _buildListGroup(
                     children: [
                       BlocBuilder<ThemeCubit, ThemeMode>(
@@ -503,10 +765,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         final isDark = mode == ThemeMode.dark;
                         return _buildListItem(
                           icon: Icons.dark_mode,
-                          title: AppLocalizations.of(context)!.darkMode,
-                          subtitle: isDark
-                              ? AppLocalizations.of(context)!.enabled
-                              : AppLocalizations.of(context)!.disabled,
+                          title: 'Mode sombre',
+                          subtitle: isDark ? 'Activé' : 'Désactivé',
                           trailingWidget: Switch(
                             value: isDark,
                             activeThumbColor: const Color(0xFF6C63FF),
@@ -520,17 +780,24 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
 
+                  // Premium Gold Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: _buildPremiumCard(),
+                  ),
+
                   const SizedBox(height: 24),
 
                   const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 30.0),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 30.0),
                     child: Center(
                       child: Text(
                         "Edited by | Ranto Nandrianina 2026",
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFFF6C63FF),
+                          color: Color(0xfff6c63ff),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -597,7 +864,7 @@ class _SettingsPageState extends State<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.1),
+            color: AppTheme.primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppTheme.primaryColor, size: 20),

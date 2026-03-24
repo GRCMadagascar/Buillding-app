@@ -9,7 +9,7 @@ import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
 import 'package:flutter/services.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+// Localization removed — using hardcoded French strings.
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -59,9 +59,8 @@ class _EditProductPageState extends State<EditProductPage> {
                 size: 32, color: Theme.of(context).primaryColor),
             onPressed: () => context.pop(),
           ),
-          title: Text(AppLocalizations.of(context)!.editProduct,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: const Text('Modifier le produit',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -78,25 +77,33 @@ class _EditProductPageState extends State<EditProductPage> {
                         horizontal: 12, vertical: 12),
                     margin: const EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.04),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.04),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.qr_code_scanner,
-                            color: AppTheme.primaryColor, size: 28),
+                        Hero(
+                          tag: widget.product.id,
+                          child: CircleAvatar(
+                            backgroundColor:
+                                AppTheme.primaryColor.withValues(alpha: 0.1),
+                            child: Text(widget.product.name.isNotEmpty
+                                ? widget.product.name[0].toUpperCase()
+                                : '?'),
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(AppLocalizations.of(context)!.productName,
+                              Text('Nom du produit',
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: AppTheme.primaryColor
-                                          .withOpacity(0.7))),
+                                          .withValues(alpha: 0.7))),
                               const SizedBox(height: 4),
                               Text(_barcode,
                                   style: const TextStyle(
@@ -115,8 +122,7 @@ class _EditProductPageState extends State<EditProductPage> {
                               builder: (ctx) {
                                 String edited = widget.product.barcode;
                                 return AlertDialog(
-                                  title: Text(AppLocalizations.of(context)!
-                                      .editBarcode),
+                                  title: const Text('Modifier le code-barres'),
                                   content: TextFormField(
                                     initialValue: edited,
                                     keyboardType: TextInputType.text,
@@ -125,15 +131,11 @@ class _EditProductPageState extends State<EditProductPage> {
                                   actions: [
                                     TextButton(
                                         onPressed: () => Navigator.pop(ctx),
-                                        child: Text(
-                                            AppLocalizations.of(context)!
-                                                .cancel)),
+                                        child: const Text('Annuler')),
                                     ElevatedButton(
                                         onPressed: () =>
                                             Navigator.pop(ctx, edited),
-                                        child: Text(
-                                            AppLocalizations.of(context)!
-                                                .save)),
+                                        child: const Text('Enregistrer')),
                                   ],
                                 );
                               },
@@ -150,18 +152,17 @@ class _EditProductPageState extends State<EditProductPage> {
                     ),
                   ),
 
-                  InputLabel(text: AppLocalizations.of(context)!.productName),
+                  const InputLabel(text: 'Nom du produit'),
 
                   TextFormField(
                     initialValue: _name,
                     textCapitalization: TextCapitalization.words,
-                    validator: AppValidators.required(
-                        AppLocalizations.of(context)!.pleaseEnterName),
+                    validator: AppValidators.required('Veuillez saisir le nom'),
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
 
-                  const InputLabel(text: 'Price'),
+                  const InputLabel(text: 'Prix'),
 
                   // Price row: value on left, fixed currency unit on far right
                   Row(
@@ -191,9 +192,8 @@ class _EditProductPageState extends State<EditProductPage> {
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(AppLocalizations.of(context)!.totalInAriary,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text('TOTAL EN ARIARY',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -205,7 +205,7 @@ class _EditProductPageState extends State<EditProductPage> {
         bottomNavigationBar: PrimaryButton(
           onPressed: _submit,
           icon: Icons.save,
-          label: AppLocalizations.of(context)!.saveChanges,
+          label: 'Enregistrer les modifications',
         ));
   }
 }

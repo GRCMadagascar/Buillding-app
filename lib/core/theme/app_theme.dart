@@ -46,7 +46,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColor,
       ),
@@ -81,7 +81,7 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 4,
-          shadowColor: primaryColor.withOpacity(0.4),
+          shadowColor: primaryColor.withValues(alpha: 0.4),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -124,7 +124,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.6),
+        shadowColor: Colors.black.withValues(alpha: 0.6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         // Use the same deep dark card color so cards match the scaffold in dark mode
         color: const Color(0xFF121212),

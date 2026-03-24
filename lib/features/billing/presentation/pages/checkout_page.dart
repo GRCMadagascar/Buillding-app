@@ -6,12 +6,13 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../../core/data/hive_database.dart';
+import '../../data/models/sale_model.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:io';
 import '../../../../core/utils/currency_formatter.dart';
 import '../bloc/billing_bloc.dart';
 import 'dart:math' as math;
-import 'package:flutter/services.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+// Removed localization dependency: texts are hardcoded in French.
 // snackbar_helper removed; use ScaffoldMessenger or central helper when needed.
 
 enum Operator { mvola, orange, airtel }
@@ -85,18 +86,18 @@ class _CheckoutPageState extends State<CheckoutPage>
     switch (_selectedOperator) {
       case Operator.mvola:
         // *111*1*2*RECIPIENT_NUMBER*AMOUNT*#
-        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
         break;
       case Operator.orange:
         // *144*AMOUNT*RECIPIENT_NUMBER*#
-        ussd = '${code}${amount.toStringAsFixed(0)}*${phone}#';
+        ussd = '$code${amount.toStringAsFixed(0)}*$phone#';
         break;
       case Operator.airtel:
         // *333*RECIPIENT_NUMBER*AMOUNT*# (assumed similar to Mvola)
-        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
         break;
       default:
-        ussd = '${code}${phone}*${amount.toStringAsFixed(0)}#';
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
     }
 
     final encoded = ussd.replaceAll('#', '%23');
@@ -128,7 +129,7 @@ class _CheckoutPageState extends State<CheckoutPage>
 
   void _updateChange() {
     final raw =
-        _amountReceivedController.text.replaceAll(RegExp('[^0-9\.]'), '');
+        _amountReceivedController.text.replaceAll(RegExp('[^0-9.]'), '');
     final parsed = double.tryParse(raw);
     setState(() {
       _amountReceived = parsed ?? 0.0;
@@ -187,7 +188,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                       boxShadow: selected
                           ? [
                               BoxShadow(
-                                color: _operatorColor().withOpacity(0.2),
+                                color: _operatorColor().withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               )
@@ -226,40 +227,128 @@ class _CheckoutPageState extends State<CheckoutPage>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor =
-        isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFE5E5EA);
+        isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE5E5EA);
 
     return PopScope(
-        canPop: false,
+        // allow normal back navigation; do NOT clear the cart when returning
+        // to the previous screen so the user's selections remain intact.
+        canPop: true,
         onPopInvokedWithResult: (bool didPop, dynamic result) {
-          if (didPop) return;
-          context.read<BillingBloc>().add(ClearCartEvent());
-          context.go('/');
+          // no-op: we intentionally avoid clearing the cart here
+          return;
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(AppLocalizations.of(context)!.checkout,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            title: const Text('Paiement',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
               icon: Icon(Icons.chevron_left,
                   size: 28, color: Theme.of(context).primaryColor),
-              onPressed: () {
-                context.read<BillingBloc>().add(ClearCartEvent());
-                context.go('/');
-              },
+              onPressed: () => context.pop(),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Ajouter plus',
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: () {
+                  // Return to product selection without clearing the cart
+                  context.pop();
+                },
+              ),
+              IconButton(
+                tooltip: 'Vider le panier',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () {
+                  // Clear the cart for a new customer
+                  context.read<BillingBloc>().add(ClearCartEvent());
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Panier vidé'),
+                    duration: Duration(seconds: 2),
+                  ));
+                },
+              ),
+            ],
           ),
           body: BlocConsumer<BillingBloc, BillingState>(
             listener: (context, state) {
               if (state.printSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Printed successfully'),
-                    backgroundColor: Colors.green));
-                // context.read<BillingBloc>().add(ClearCartEvent());
-                // context.go('/');
+                // Persist the sale before clearing the cart. Build a sale map
+                // from current billing state and page-local context (amounts).
+                try {
+                  final id = const Uuid().v4();
+                  final sale = SaleModel.fromCart(
+                    id: id,
+                    date: DateTime.now(),
+                    cartItems: state.cartItems,
+                    total: state.totalAmount,
+                    paymentMethod: _selectedOperator?.toString() ?? 'Espèces',
+                    amountReceived: _amountReceived,
+                    change: _change,
+                  );
+                  HiveDatabase.addSaleMap(sale.toMap());
+                } catch (_) {}
+                // Show a modern success sheet with a small bounce animation.
+                showModalBottomSheet(
+                  context: context,
+                  isDismissible: false,
+                  enableDrag: false,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) {
+                    return Center(
+                      child: Container(
+                        width: 240,
+                        height: 240,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.8, end: 1.0),
+                              duration: const Duration(milliseconds: 600),
+                              curve: Curves.elasticOut,
+                              builder: (context, val, child) {
+                                return Transform.scale(
+                                  scale: val,
+                                  child: child,
+                                );
+                              },
+                              child: Container(
+                                width: 96,
+                                height: 96,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.check,
+                                    color: Colors.white, size: 56),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            const Text('Transaction réussie',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+
+                // Close the sheet after a short delay and clear the cart for a
+                // new customer.
+                Future.delayed(const Duration(milliseconds: 1400), () {
+                  try {
+                    Navigator.of(context).pop();
+                  } catch (_) {}
+                  context.read<BillingBloc>().add(ClearCartEvent());
+                });
               }
             },
             builder: (context, billingState) {
@@ -279,72 +368,109 @@ class _CheckoutPageState extends State<CheckoutPage>
                             horizontal: 16, vertical: 16),
                         child: Column(
                           children: [
-                            // Table
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0xFF1A1A1A)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: borderColor),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Table(
-                                  border: TableBorder(
-                                    horizontalInside:
-                                        BorderSide(color: borderColor),
-                                    bottom: BorderSide(color: borderColor),
+                            // Table or empty cart state
+                            if (billingState.cartItems.isEmpty)
+                              Container(
+                                height: 260,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF1A1A1A)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.shopping_cart_outlined,
+                                          size: 72,
+                                          color: Theme.of(context).hintColor),
+                                      const SizedBox(height: 12),
+                                      const Text('Votre panier est vide',
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 8),
+                                      TextButton.icon(
+                                        onPressed: () =>
+                                            context.push('/products'),
+                                        icon:
+                                            const Icon(Icons.add_shopping_cart),
+                                        label:
+                                            const Text('Ajouter des produits'),
+                                      )
+                                    ],
                                   ),
-                                  children: [
-                                    // Header row
-                                    TableRow(
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? const Color(0xFF2A2A2A)
-                                            : const Color(0xFFF8FAFC),
-                                        border: Border(
-                                            bottom:
-                                                BorderSide(color: borderColor)),
-                                      ),
-                                      children: [
-                                        _buildHeaderCell(
-                                            'Product Name', TextAlign.left),
-                                        _buildHeaderCell(
-                                            'Price', TextAlign.right),
-                                        _buildHeaderCell(
-                                            'Total', TextAlign.right),
-                                      ],
-                                    ),
-                                    // Items rows
-                                    ...billingState.cartItems.map((item) {
-                                      return TableRow(
-                                        children: [
-                                          _buildDataCell(
-                                              '${item.quantity} x ${item.product.name}',
-                                              TextAlign.left),
-                                          _buildDataCell(
-                                              '${formatMGA(item.product.price)} Ar',
-                                              TextAlign.right,
-                                              isSubtitle: true),
-                                          _buildDataCell(
-                                              '${formatMGA(item.total)} Ar',
-                                              TextAlign.right,
-                                              isBold: true),
-                                        ],
-                                      );
-                                    }),
+                                ),
+                              )
+                            else
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF1A1A1A)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: borderColor),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.05),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    )
                                   ],
                                 ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Table(
+                                    border: TableBorder(
+                                      horizontalInside:
+                                          BorderSide(color: borderColor),
+                                      bottom: BorderSide(color: borderColor),
+                                    ),
+                                    children: [
+                                      // Header row
+                                      TableRow(
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? const Color(0xFF2A2A2A)
+                                              : const Color(0xFFF8FAFC),
+                                          border: Border(
+                                              bottom: BorderSide(
+                                                  color: borderColor)),
+                                        ),
+                                        children: [
+                                          _buildHeaderCell(
+                                              'Nom du produit', TextAlign.left),
+                                          _buildHeaderCell(
+                                              'Prix', TextAlign.right),
+                                          _buildHeaderCell(
+                                              'Total', TextAlign.right),
+                                        ],
+                                      ),
+                                      // Items rows
+                                      ...billingState.cartItems.map((item) {
+                                        return TableRow(
+                                          children: [
+                                            _buildDataCell(
+                                                '${item.quantity} x ${item.product.name}',
+                                                TextAlign.left),
+                                            _buildDataCell(
+                                                '${formatMGA(item.product.price)} Ar',
+                                                TextAlign.right,
+                                                isSubtitle: true),
+                                            _buildDataCell(
+                                                '${formatMGA(item.total)} Ar',
+                                                TextAlign.right,
+                                                isBold: true),
+                                          ],
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
                             const SizedBox(height: 24),
 
                             const SizedBox(
@@ -358,14 +484,16 @@ class _CheckoutPageState extends State<CheckoutPage>
                     Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Theme.of(context).cardColor.withOpacity(0.95)
-                            : Colors.white.withOpacity(0.9),
+                            ? Theme.of(context)
+                                .cardColor
+                                .withValues(alpha: 0.95)
+                            : Colors.white.withValues(alpha: 0.9),
                         borderRadius: const BorderRadius.horizontal(
                             left: Radius.circular(24),
                             right: Radius.circular(24)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, -4),
                           ),
@@ -386,14 +514,12 @@ class _CheckoutPageState extends State<CheckoutPage>
                                 upiId.isNotEmpty
                                     ? Column(
                                         children: [
-                                          Text(
-                                            'Mobile money payment',
+                                          const Text(
+                                            'Paiement Mobile Money',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
-                                              color: isDark
-                                                  ? Colors.grey[200]
-                                                  : Colors.black87,
+                                              color: Colors.black87,
                                               letterSpacing: 1.1,
                                             ),
                                           ),
@@ -504,7 +630,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                             decimal: true),
                                     textAlign: TextAlign.end,
                                     decoration: InputDecoration(
-                                      hintText: 'Vola nomena',
+                                      hintText: 'Montant reçu',
                                       suffixText: 'Ar',
                                       filled: true,
                                       fillColor: Theme.of(context).cardColor,
@@ -520,7 +646,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Text('Fameriny',
+                                      const Text('Rendu',
                                           style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600)),
@@ -578,7 +704,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                          'Amount received is less than total'),
+                                          'Le montant reçu est inférieur au total'),
                                       backgroundColor: Colors.orange,
                                       duration: Duration(seconds: 2),
                                     ),
@@ -602,14 +728,15 @@ class _CheckoutPageState extends State<CheckoutPage>
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Shop details not loaded'),
+                                    content:
+                                        Text('Détails du magasin non chargés'),
                                     backgroundColor: Colors.red,
                                     duration: Duration(seconds: 2),
                                   ),
                                 );
                               }
                             },
-                            label: AppLocalizations.of(context)!.printReceipt,
+                            label: 'Imprimer le reçu',
                             icon: Icons.print,
                             isLoading: billingState.isPrinting,
                           ),

@@ -7,8 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/utils/snackbar_helper.dart';
 import 'core/locale/language_cubit.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+// Localization removed: hardcoded French strings used across the app.
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
@@ -49,53 +48,44 @@ class MyApp extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, mode) {
-          return BlocBuilder<LanguageCubit, LanguageState>(
-            builder: (context, lang) {
-              return MaterialApp.router(
-                // Use locale from LanguageCubit (LanguageCubit defaults to French)
-                locale: lang.locale,
-                // Use generated delegates & supported locales from gen-l10n so
-                // the app recognizes all provided locales and delegates.
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                title: 'GRC POS SYSTEM',
-                // Keep the base themes from AppTheme but inject our global SnackBar style
-                theme: AppTheme.lightTheme.copyWith(
-                  snackBarTheme: const SnackBarThemeData(
-                    behavior: SnackBarBehavior.floating,
-                    shape: StadiumBorder(),
-                    backgroundColor: Color(0xFFD32F2F), // default error red
-                    elevation: 6.0,
-                    contentTextStyle: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15.0,
-                    ),
-                  ),
+          return MaterialApp.router(
+            // App is hardcoded to French. Remove localization delegates.
+            locale: const Locale('fr'),
+            title: 'GRC POS SYSTEM',
+            // Keep the base themes from AppTheme but inject our global SnackBar style
+            theme: AppTheme.lightTheme.copyWith(
+              snackBarTheme: const SnackBarThemeData(
+                behavior: SnackBarBehavior.floating,
+                shape: StadiumBorder(),
+                backgroundColor: Color(0xFFD32F2F), // default error red
+                elevation: 6.0,
+                contentTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15.0,
                 ),
-                darkTheme: AppTheme.darkTheme.copyWith(
-                  snackBarTheme: const SnackBarThemeData(
-                    behavior: SnackBarBehavior.floating,
-                    shape: StadiumBorder(),
-                    backgroundColor: Color(0xFFD32F2F),
-                    elevation: 6.0,
-                    contentTextStyle: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15.0,
-                    ),
-                  ),
+              ),
+            ),
+            darkTheme: AppTheme.darkTheme.copyWith(
+              snackBarTheme: const SnackBarThemeData(
+                behavior: SnackBarBehavior.floating,
+                shape: StadiumBorder(),
+                backgroundColor: Color(0xFFD32F2F),
+                elevation: 6.0,
+                contentTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15.0,
                 ),
-                // Force Dark Mode as the default experience. If you later want
-                // to respect user choice, switch this back to `mode` or adjust
-                // ThemeCubit to emit the preferred default.
-                themeMode: ThemeMode.dark,
-                // Use global scaffold messenger key so the helper can show snackbars
-                scaffoldMessengerKey: scaffoldMessengerKey,
-                routerConfig: router,
-                debugShowCheckedModeBanner: false,
-              );
-            },
+              ),
+            ),
+            // Use the ThemeCubit-controlled mode so the UI can toggle
+            // between Dark and Light. ThemeCubit defaults to Dark now.
+            themeMode: mode,
+            // Use global scaffold messenger key so the helper can show snackbars
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            routerConfig: router,
+            debugShowCheckedModeBanner: false,
           );
         },
       ),

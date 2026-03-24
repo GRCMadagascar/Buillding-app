@@ -140,7 +140,7 @@ class PrinterHelper {
 
     // Social icons row (textual)
     final socialRow =
-        'FB:${facebook}  IG:${instagram}  TT:${tiktok}  WA:${whatsapp}';
+        'FB:$facebook  IG:$instagram  TT:$tiktok  WA:$whatsapp';
     bytes += _textToBytes(socialRow);
     bytes += EscPos.lineFeed;
 

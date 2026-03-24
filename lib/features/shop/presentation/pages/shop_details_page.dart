@@ -7,9 +7,8 @@ import '../../domain/entities/shop.dart';
 import '../../../../core/data/hive_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:billing_app/l10n/app_localizations.dart';
+// Localization removed — using hardcoded French strings.
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../bloc/shop_bloc.dart';
@@ -242,9 +241,12 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color:
-              Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
-                  Colors.grey[500],
+          color: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.color
+                  ?.withValues(alpha: 0.6) ??
+              Colors.grey[500],
           fontWeight: FontWeight.w500,
         ),
         border: const OutlineInputBorder(
@@ -262,7 +264,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Shop Details'),
+          title: const Text('Détails du magasin'),
         ),
         body: BlocConsumer<ShopBloc, ShopState>(
           listener: (context, state) {
@@ -270,7 +272,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
               _updateControllers(state.shop);
             } else if (state is ShopOperationSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Shop details saved!'),
+                  content: Text('Détails du magasin enregistrés!'),
                   backgroundColor: Colors.green));
               context.pop();
             } else if (state is ShopError) {
@@ -293,50 +295,50 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('General Information',
+                    Text('Informations générales',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                           color: const Color.fromARGB(255, 165, 96, 6)
-                              .withOpacity(0.8),
+                              .withValues(alpha: 0.8),
                         )),
                     const SizedBox(
                       height: 5,
                     ),
                     Text(
-                      'These details will appear on your digital and printed receipts.',
+                      'Ces informations apparaîtront sur vos reçus numériques et imprimés.',
                       style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                     const SizedBox(height: 24),
-                    const InputLabel(text: 'Shop Name'),
+                    const InputLabel(text: 'Nom du magasin'),
                     _buildTextField(
                       controller: _nameController,
-                      hint: 'Shop Name',
-                      validator: AppValidators.required('Required'),
+                      hint: 'Nom du magasin',
+                      validator: AppValidators.required('Requis'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Address Line 1'),
+                    const InputLabel(text: 'Adresse'),
                     _buildTextField(
                       controller: _address1Controller,
-                      hint: 'Address',
-                      validator: AppValidators.required('Required'),
+                      hint: 'Adresse',
+                      validator: AppValidators.required('Requis'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Email (Optional)'),
+                    const InputLabel(text: 'Email (optionnel)'),
                     _buildTextField(
                       controller: _emailController,
                       hint: 'email@yourshop.com',
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Admin Name'),
+                    const InputLabel(text: 'Nom de l\'administrateur'),
                     _buildTextField(
                       controller: _adminController,
-                      hint: 'Admin name for receipts',
+                      hint: 'Nom de l\'administrateur pour les reçus',
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Shop Logo'),
+                    const InputLabel(text: 'Logo du magasin'),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -397,7 +399,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     ),
                     const SizedBox(height: 16),
                     // Receipt Preview
-                    const InputLabel(text: 'Receipt Preview'),
+                    const InputLabel(text: 'Aperçu du reçu'),
                     const SizedBox(height: 8),
                     Card(
                       elevation: 2,
@@ -471,12 +473,12 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     //   keyboardType: TextInputType.phone,
                     // ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Phone Number'),
+                    const InputLabel(text: 'Numéro de téléphone'),
                     _buildTextField(
                       controller: _phoneController,
-                      hint: 'Phone Number',
+                      hint: 'Numéro de téléphone',
                       keyboardType: TextInputType.phone,
-                      validator: AppValidators.required('Required'),
+                      validator: AppValidators.required('Requis'),
                     ),
                     const SizedBox(height: 15),
                     const SizedBox(height: 12),
@@ -490,16 +492,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ListTile(
+                            const ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                  AppLocalizations.of(context)!.paymentSettings,
+                              title: Text('Paramètres de paiement',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                       color: AppTheme.primaryColor)),
-                              subtitle: Text(AppLocalizations.of(context)!
-                                  .paymentSettingsSubtitle),
+                              subtitle: Text(
+                                  'Configurez les méthodes de paiement mobile et leurs numéros.'),
                             ),
                             const Divider(),
                             // MVola
@@ -510,10 +511,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                                 keyboardType: TextInputType.phone,
                                 decoration: const InputDecoration(
                                   prefixIcon: Icon(Icons.phone_android),
-                                  labelText: 'MVola Number',
+                                  labelText: 'Numéro MVola',
                                   hintText: '0383664786',
                                 ),
-                                validator: AppValidators.required('Required'),
+                                validator: AppValidators.required('Requis'),
                               ),
                             ),
                             // Orange
@@ -524,10 +525,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                                 keyboardType: TextInputType.phone,
                                 decoration: const InputDecoration(
                                   prefixIcon: Icon(Icons.phone_android),
-                                  labelText: 'Orange Money Number',
+                                  labelText: 'Numéro Orange Money',
                                   hintText: '0372177785',
                                 ),
-                                validator: AppValidators.required('Required'),
+                                validator: AppValidators.required('Requis'),
                               ),
                             ),
                             // Airtel
@@ -538,10 +539,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                                 keyboardType: TextInputType.phone,
                                 decoration: const InputDecoration(
                                   prefixIcon: Icon(Icons.phone_android),
-                                  labelText: 'Airtel Money Number',
+                                  labelText: 'Numéro Airtel Money',
                                   hintText: '0332177785',
                                 ),
-                                validator: AppValidators.required('Required'),
+                                validator: AppValidators.required('Requis'),
                               ),
                             ),
                           ],
@@ -559,14 +560,14 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const InputLabel(text: 'Receipt Footer Text'),
-                        Text('Max 150 chars',
+                        Text('Max 150 caractères',
                             style: TextStyle(
                                 fontSize: 11, color: Colors.grey[400])),
                       ],
                     ),
                     _buildTextField(
                       controller: _footerController,
-                      hint: 'Thank you, Visit again!!!',
+                      hint: 'Merci, revenez bientôt!',
                       maxLines: 4,
                       maxLength: 100,
                     ),
@@ -581,7 +582,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
           child: PrimaryButton(
             onPressed: _saveShop,
             icon: Icons.save,
-            label: 'Save Details',
+            label: 'Enregistrer les détails',
           ),
         ));
   }

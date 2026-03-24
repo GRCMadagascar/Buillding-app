@@ -3,13 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/hive_database.dart';
 
 class ThemeCubit extends Cubit<ThemeMode> {
-  ThemeCubit() : super(ThemeMode.system);
+  // Default to Dark mode as requested.
+  ThemeCubit() : super(ThemeMode.dark);
 
   static const _key = 'isDarkMode';
 
   void loadFromPersistence() {
     final box = HiveDatabase.settingsBox;
-    final isDark = box.get(_key, defaultValue: false) as bool;
+    // Default to dark if not persisted.
+    final isDark = box.get(_key, defaultValue: true) as bool;
     emit(isDark ? ThemeMode.dark : ThemeMode.light);
   }
 

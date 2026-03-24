@@ -107,8 +107,8 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.close, size: 30),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const Text('Select Products',
-                          style: const TextStyle(
+                      const Text('Sélectionner des produits',
+                          style: TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.check_circle,
@@ -130,10 +130,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   // --- SEARCH BAR ---
                   TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search product name...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: const OutlineInputBorder(),
+                    decoration: const InputDecoration(
+                      hintText: 'Rechercher le nom du produit...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setPopupState(() => searchQuery = value);
@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF6C63FF).withOpacity(0.1)
+                                ? const Color(0xFF6C63FF).withValues(alpha: 0.1)
                                 : Colors.transparent,
                             border: Border.all(
                               color: isSelected
@@ -256,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                     if (_isCameraOn && mounted) _scannerController.start();
                   },
             icon: Icons.payment,
-            label: 'Review Order',
+            label: 'Vérifier la commande',
           );
         }),
       );
@@ -371,7 +371,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           const Text(
             'Camera is turned off',
-            style: const TextStyle(
+            style: TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -475,7 +475,7 @@ class _HomePageState extends State<HomePage> {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -641,7 +641,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(4),
