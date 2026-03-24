@@ -32,7 +32,6 @@ class _SettingsPageState extends State<SettingsPage>
   late final AnimationController _shimmerController;
   late final Animation<double> _shimmerAnim;
   late final AnimationController _ctaController;
-  late final Animation<double> _ctaScale;
   @override
   void initState() {
     super.initState();
@@ -50,16 +49,8 @@ class _SettingsPageState extends State<SettingsPage>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-    _ctaScale = TweenSequence<double>([
-      TweenSequenceItem(
-          tween: Tween(begin: 1.0, end: 1.06)
-              .chain(CurveTween(curve: Curves.easeOut)),
-          weight: 50),
-      TweenSequenceItem(
-          tween: Tween(begin: 1.06, end: 1.0)
-              .chain(CurveTween(curve: Curves.easeIn)),
-          weight: 50),
-    ]).animate(_ctaController);
+    // CTA pulse animation controller. We compute scale from controller value
+    // directly in the builder to keep things simple and avoid unused fields.
   }
 
   @override
@@ -334,11 +325,17 @@ class _SettingsPageState extends State<SettingsPage>
                   tooltip: 'Langue',
                   icon: const Icon(Icons.language),
                   onSelected: (code) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      try {
-                        context.read<LanguageCubit>().setLanguageCode(code);
-                      } catch (_) {}
-                    });
+                    // Capture cubit synchronously and call it inside the
+                    // post-frame callback to avoid using BuildContext after
+                    // an async/frame gap.
+                    try {
+                      final languageCubit = context.read<LanguageCubit>();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        try {
+                          languageCubit.setLanguageCode(code);
+                        } catch (_) {}
+                      });
+                    } catch (_) {}
                   },
                   itemBuilder: (ctx) => const [
                     PopupMenuItem(
@@ -661,9 +658,10 @@ class _SettingsPageState extends State<SettingsPage>
                             content: Text(state.errorMessage!),
                             backgroundColor: Colors.red));
                       } else if (state.status == PrinterStatus.connected) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text("Connecté à l'imprimante"),
-                            backgroundColor: Colors.green));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Connecté à l'imprimante"),
+                                backgroundColor: Colors.green));
                       }
                     },
                     builder: (context, state) {
@@ -797,7 +795,7 @@ class _SettingsPageState extends State<SettingsPage>
                         "Edited by | Ranto Nandrianina 2026",
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xfff6c63ff),
+                          color: Color(0xFF6C63FF),
                           fontStyle: FontStyle.italic,
                         ),
                       ),

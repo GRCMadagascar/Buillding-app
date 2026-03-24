@@ -39,6 +39,7 @@ class _AddProductPageState extends State<AddProductPage> {
     String? result;
     await Future<void>.delayed(Duration.zero);
     result = await context.push<String>('/scanner');
+    if (!mounted) return;
     if (result != null && result.isNotEmpty) {
       setState(() {
         // Trim whitespace and assign the scanned value (works for both

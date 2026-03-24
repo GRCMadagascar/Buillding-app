@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/Fond.jpg
     - assets/grc_logo.png
+    - assets/fond_splash.png
     - assets/mvola_logo.png
     - assets/orange_logo.png
     - assets/airtel_logo.png
@@ -78,10 +79,8 @@ flutter:
     - assets/splash_screen.json
 
  # Iny andalana 65 iny akisaka kely miankavia indrindra
-flutter_launcher_icons:
-  android: "launcher_icon"
+flutter_icons:
+  android: true
   ios: true
   image_path: "assets/grc_logo.png"
-  android_icon_name: "Billing POS by GRC"
-  ios_icon_name: "Billing POS by GRC"
-  adaptive_icon_background: "#ffffff"
+  adaptive_icon_background: "#B8860B"

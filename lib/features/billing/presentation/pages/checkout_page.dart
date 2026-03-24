@@ -345,8 +345,10 @@ class _CheckoutPageState extends State<CheckoutPage>
                 // new customer.
                 Future.delayed(const Duration(milliseconds: 1400), () {
                   try {
+                    if (!mounted) return;
                     Navigator.of(context).pop();
                   } catch (_) {}
+                  if (!mounted) return;
                   context.read<BillingBloc>().add(ClearCartEvent());
                 });
               }
