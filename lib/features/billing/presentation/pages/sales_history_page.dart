@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/data/hive_database.dart';
 import 'package:intl/intl.dart';
 
@@ -19,7 +20,13 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
   }
 
   void _loadSales() {
-    _sales = HiveDatabase.getSalesMaps();
+    final all = HiveDatabase.getSalesMaps();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      _sales = [];
+    } else {
+      _sales = all.where((m) => (m['uid']?.toString() ?? '') == uid).toList();
+    }
     setState(() {});
   }
 

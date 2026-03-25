@@ -8,7 +8,7 @@ import 'package:app_settings/app_settings.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../../../core/locale/language_cubit.dart';
+// Language cubit removed; app is hardcoded to French.
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
@@ -320,39 +320,7 @@ class _SettingsPageState extends State<SettingsPage>
                     size: 28, color: Theme.of(context).primaryColor),
                 onPressed: () => context.pop(),
               ),
-              actions: [
-                PopupMenuButton<String>(
-                  tooltip: 'Langue',
-                  icon: const Icon(Icons.language),
-                  onSelected: (code) {
-                    // Capture cubit synchronously and call it inside the
-                    // post-frame callback to avoid using BuildContext after
-                    // an async/frame gap.
-                    try {
-                      final languageCubit = context.read<LanguageCubit>();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        try {
-                          languageCubit.setLanguageCode(code);
-                        } catch (_) {}
-                      });
-                    } catch (_) {}
-                  },
-                  itemBuilder: (ctx) => const [
-                    PopupMenuItem(
-                      value: 'mg',
-                      child: Text('🇲🇬  Malagasy (MGA / Ar)'),
-                    ),
-                    PopupMenuItem(
-                      value: 'fr',
-                      child: Text('🇫🇷  Français (EUR / €)'),
-                    ),
-                    PopupMenuItem(
-                      value: 'en',
-                      child: Text('🇬🇧  English (USD / \$)'),
-                    ),
-                  ],
-                ),
-              ],
+              actions: [],
             ),
             body: SingleChildScrollView(
               child: Column(

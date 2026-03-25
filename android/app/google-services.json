@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "277495993827",
+    "project_id": "grc-pos-system",
+    "storage_bucket": "grc-pos-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277495993827:android:aec525537145c2e418fcd6",
+        "android_client_info": {
+          "package_name": "com.grc.pos_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhmSgdOVBJJlxYRba1rj44rAex2HlBP0Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

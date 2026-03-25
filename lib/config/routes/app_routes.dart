@@ -10,6 +10,9 @@ import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
 import '../../features/billing/presentation/pages/splash_screen.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/signup_page.dart';
+import '../../features/auth/presentation/pages/email_verification_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -35,6 +38,18 @@ final router = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/verify',
+      builder: (context, state) => const EmailVerificationPage(),
     ),
     GoRoute(
       path: '/sales_history',

@@ -6,6 +6,7 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../../core/data/hive_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/models/sale_model.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
@@ -102,6 +103,27 @@ class _CheckoutPageState extends State<CheckoutPage>
 
     final encoded = ussd.replaceAll('#', '%23');
     return 'tel:$encoded';
+  }
+
+  /// Build a human-readable USSD string (with #) for display/instructions.
+  String _buildUssdString(String phone, double amount) {
+    if (phone.isEmpty || _selectedOperator == null) return '';
+    final code = _operatorCode();
+    String ussd;
+    switch (_selectedOperator) {
+      case Operator.mvola:
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+        break;
+      case Operator.orange:
+        ussd = '$code${amount.toStringAsFixed(0)}*$phone#';
+        break;
+      case Operator.airtel:
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+        break;
+      default:
+        ussd = '$code$phone*${amount.toStringAsFixed(0)}#';
+    }
+    return ussd;
   }
 
   // USSD/dialer helper removed — dialing should not be triggered from
@@ -279,6 +301,9 @@ class _CheckoutPageState extends State<CheckoutPage>
                 // from current billing state and page-local context (amounts).
                 try {
                   final id = const Uuid().v4();
+                  final uid =
+                      FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+
                   final sale = SaleModel.fromCart(
                     id: id,
                     date: DateTime.now(),
@@ -287,7 +312,9 @@ class _CheckoutPageState extends State<CheckoutPage>
                     paymentMethod: _selectedOperator?.toString() ?? 'Espèces',
                     amountReceived: _amountReceived,
                     change: _change,
+                    uid: uid,
                   );
+
                   HiveDatabase.addSaleMap(sale.toMap());
                 } catch (_) {}
                 // Show a modern success sheet with a small bounce animation.
@@ -356,11 +383,7 @@ class _CheckoutPageState extends State<CheckoutPage>
             builder: (context, billingState) {
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
-                String upiId = '';
-
-                if (shopState is ShopLoaded) {
-                  upiId = shopState.shop.upiId;
-                }
+                // shopState may provide shop details (phone numbers, logo, etc.)
 
                 return Column(
                   children: [
@@ -513,113 +536,206 @@ class _CheckoutPageState extends State<CheckoutPage>
                                 const SizedBox(
                                   height: 8,
                                 ),
-                                upiId.isNotEmpty
-                                    ? Column(
+                                Column(
+                                  children: [
+                                    const Text(
+                                      'Choisir un mode de paiement',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: 1.1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // Operator selection buttons
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        _operatorButton(
+                                            Operator.mvola, 'MVola'),
+                                        const SizedBox(width: 12),
+                                        _operatorButton(
+                                            Operator.orange, 'Orange'),
+                                        const SizedBox(width: 12),
+                                        _operatorButton(
+                                            Operator.airtel, 'Airtel'),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    // Show QR, merchant number and USSD instructions when operator selected
+                                    if (_selectedOperator != null)
+                                      Column(
                                         children: [
-                                          const Text(
-                                            'Paiement Mobile Money',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                              letterSpacing: 1.1,
+                                          const Text('Scanner le QR Code',
+                                              style: TextStyle(
+                                                  color: Colors.white70)),
+                                          const SizedBox(height: 8),
+                                          // Larger, premium-styled QR area. The QR encodes a
+                                          // tel: USSD string so scanning opens the dialer
+                                          // with the complete transfer code.
+                                          Container(
+                                            width: 260,
+                                            height: 260,
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              color: isDark
+                                                  ? const Color(0xFF0B0D0F)
+                                                  : Colors.white,
+                                              border: Border.all(
+                                                color: _operatorColor(),
+                                                width: 6,
+                                              ),
+                                              boxShadow: [
+                                                if (isDark)
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withValues(alpha: 0.6),
+                                                    blurRadius: 12,
+                                                    offset: const Offset(0, 6),
+                                                  )
+                                              ],
                                             ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          // Operator selection buttons
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              _operatorButton(
-                                                  Operator.mvola, 'MVola'),
-                                              const SizedBox(width: 12),
-                                              _operatorButton(
-                                                  Operator.orange, 'Orange'),
-                                              const SizedBox(width: 12),
-                                              _operatorButton(
-                                                  Operator.airtel, 'Airtel'),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          // Show QR only when operator selected
-                                          if (_selectedOperator != null)
-                                            Column(
-                                              children: [
-                                                Container(
-                                                  width: 190,
-                                                  height: 190,
-                                                  padding:
-                                                      const EdgeInsets.all(8),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                    color: Colors.white,
-                                                    border: Border.all(
-                                                        color: _operatorColor(),
-                                                        width: 6),
-                                                  ),
-                                                  child: Center(
-                                                    child: Stack(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      children: [
-                                                        PrettyQrView.data(
-                                                          data: _buildQrData(
-                                                              _operatorPhone(
-                                                                  shopState),
-                                                              billingState
-                                                                  .totalAmount),
-                                                        ),
-                                                        // overlay processed logo at center if available
-                                                        Builder(builder: (ctx) {
-                                                          final settings =
-                                                              HiveDatabase
-                                                                  .settingsBox;
-                                                          final logoPath =
-                                                              settings.get(
-                                                                      'shop_logo')
-                                                                  as String?;
-                                                          if (logoPath !=
-                                                                  null &&
-                                                              logoPath
-                                                                  .isNotEmpty) {
-                                                            final f =
-                                                                File(logoPath);
-                                                            if (f
-                                                                .existsSync()) {
-                                                              return Container(
-                                                                width: 48,
-                                                                height: 48,
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(4),
-                                                                color: Colors
-                                                                    .white,
-                                                                child:
-                                                                    Image.file(
-                                                                  f,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              );
-                                                            }
-                                                          }
-                                                          return const SizedBox
-                                                              .shrink();
-                                                        }),
-                                                      ],
+                                            child: Center(
+                                              child: Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  // Constrain the QR rendering to fill the
+                                                  // available space; PrettyQrView will
+                                                  // encode the tel: string so scanners
+                                                  // open the phone dialer.
+                                                  SizedBox.expand(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              6.0),
+                                                      child: PrettyQrView.data(
+                                                        data: _buildQrData(
+                                                            _operatorPhone(
+                                                                shopState),
+                                                            billingState
+                                                                .totalAmount),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                // small spacer to separate QR from surrounding elements
-                                                const SizedBox(height: 6),
-                                              ],
+                                                  // overlay shop (Diary Fashion) logo at center if available
+                                                  Builder(builder: (ctx) {
+                                                    final settings =
+                                                        HiveDatabase
+                                                            .settingsBox;
+                                                    final logoPath = settings
+                                                            .get('shop_logo')
+                                                        as String?;
+                                                    if (logoPath != null &&
+                                                        logoPath.isNotEmpty) {
+                                                      final f = File(logoPath);
+                                                      if (f.existsSync()) {
+                                                        return Container(
+                                                          width: 64,
+                                                          height: 64,
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(6),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: isDark
+                                                                ? Colors.black
+                                                                : Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
+                                                          ),
+                                                          child: Image.file(
+                                                            f,
+                                                            fit: BoxFit.contain,
+                                                          ),
+                                                        );
+                                                      }
+                                                    }
+                                                    // Try a bundled Diary Fashion logo as fallback
+                                                    try {
+                                                      return Container(
+                                                        width: 64,
+                                                        height: 64,
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(6),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isDark
+                                                              ? Colors.black
+                                                              : Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                        ),
+                                                        child: Image.asset(
+                                                          'assets/diary_fashion_logo.png',
+                                                          fit: BoxFit.contain,
+                                                          errorBuilder:
+                                                              (ctx, err, st) =>
+                                                                  const SizedBox
+                                                                      .shrink(),
+                                                        ),
+                                                      );
+                                                    } catch (_) {
+                                                      return const SizedBox
+                                                          .shrink();
+                                                    }
+                                                  }),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          // Merchant number and USSD instructions
+                                          if ((_operatorPhone(shopState))
+                                              .isNotEmpty)
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 12.0,
+                                                      vertical: 6),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Numéro du commerçant : ${_operatorPhone(shopState)}',
+                                                    style: const TextStyle(
+                                                        color: Colors.black87,
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  SelectableText(
+                                                    'USSD: ${_buildUssdString(_operatorPhone(shopState), billingState.totalAmount)}',
+                                                    style: const TextStyle(
+                                                        color: Colors.black54,
+                                                        fontSize: 13),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                         ],
                                       )
-                                    : const SizedBox.shrink(),
+                                    else
+                                      Column(
+                                        children: const [
+                                          SizedBox(height: 8),
+                                          Text('Aucun mode sélectionné',
+                                              style: TextStyle(
+                                                  color: Colors.white70)),
+                                          SizedBox(height: 6),
+                                        ],
+                                      ),
+                                  ],
+                                ),
                                 const SizedBox(height: 12),
                                 // Amount received input
                                 Padding(
@@ -698,50 +814,40 @@ class _CheckoutPageState extends State<CheckoutPage>
                               ],
                             ),
                           ),
-                          PrimaryButton(
-                            onPressed: () async {
-                              if (shopState is ShopLoaded) {
-                                if (_amountReceived <
-                                    billingState.totalAmount) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Le montant reçu est inférieur au total'),
-                                      backgroundColor: Colors.orange,
-                                      duration: Duration(seconds: 2),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                // Only print the receipt here. Do NOT initiate any USSD or
-                                // dialer actions from the Print button.
-                                context.read<BillingBloc>().add(
-                                      PrintReceiptEvent(
-                                        shopName: shopState.shop.name,
-                                        address1: shopState.shop.addressLine1,
-                                        email: shopState.shop.email,
-                                        phone: shopState.shop.phoneNumber,
-                                        amountReceived: _amountReceived,
-                                        change: _change,
-                                        footer: shopState.shop.footerText,
-                                      ),
-                                    );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Détails du magasin non chargés'),
-                                    backgroundColor: Colors.red,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
-                            label: 'Imprimer le reçu',
-                            icon: Icons.print,
-                            isLoading: billingState.isPrinting,
-                          ),
+                          Builder(builder: (ctx) {
+                            final ShopLoaded? shopLoaded =
+                                shopState is ShopLoaded ? shopState : null;
+                            // Printing should be possible once an operator is selected
+                            // and shop information is available. The user will use
+                            // the USSD instructions to perform payment; we no longer
+                            // require entering amountReceived before printing.
+                            final canPrint =
+                                _selectedOperator != null && shopLoaded != null;
+                            return PrimaryButton(
+                              onPressed: canPrint
+                                  ? () async {
+                                      // Print only when shop state available and amounts ok
+                                      context.read<BillingBloc>().add(
+                                            PrintReceiptEvent(
+                                              shopName: shopLoaded.shop.name,
+                                              address1:
+                                                  shopLoaded.shop.addressLine1,
+                                              email: shopLoaded.shop.email,
+                                              phone:
+                                                  shopLoaded.shop.phoneNumber,
+                                              amountReceived: _amountReceived,
+                                              change: _change,
+                                              footer:
+                                                  shopLoaded.shop.footerText,
+                                            ),
+                                          );
+                                    }
+                                  : null,
+                              label: 'Imprimer le reçu',
+                              icon: Icons.print,
+                              isLoading: billingState.isPrinting,
+                            );
+                          }),
                         ],
                       ),
                     ),

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../settings/presentation/bloc/settings_event.dart';
-import 'home_page.dart';
+import '../../../auth/presentation/pages/login_page.dart';
 import '../../../../core/locale/language_cubit.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
     _navigated = true;
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 

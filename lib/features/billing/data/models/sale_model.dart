@@ -28,6 +28,7 @@ class SaleModel {
   final String paymentMethod;
   final double amountReceived;
   final double change;
+  final String uid;
 
   SaleModel({
     required this.id,
@@ -37,6 +38,7 @@ class SaleModel {
     required this.paymentMethod,
     required this.amountReceived,
     required this.change,
+    required this.uid,
   });
 
   Map<String, dynamic> toMap() => {
@@ -47,6 +49,7 @@ class SaleModel {
         'paymentMethod': paymentMethod,
         'amountReceived': amountReceived,
         'change': change,
+        'uid': uid,
       };
 
   factory SaleModel.fromMap(Map<String, dynamic> m) => SaleModel(
@@ -59,6 +62,7 @@ class SaleModel {
         paymentMethod: m['paymentMethod'] as String,
         amountReceived: (m['amountReceived'] as num).toDouble(),
         change: (m['change'] as num).toDouble(),
+        uid: m['uid'] as String? ?? 'unknown',
       );
 
   /// Convenience: construct from Billing cart items
@@ -70,6 +74,7 @@ class SaleModel {
     required String paymentMethod,
     required double amountReceived,
     required double change,
+    required String uid,
   }) {
     final items = cartItems.map((ci) {
       // Expecting CartItem shape: has product and quantity
@@ -86,6 +91,7 @@ class SaleModel {
       paymentMethod: paymentMethod,
       amountReceived: amountReceived,
       change: change,
+      uid: uid,
     );
   }
 }

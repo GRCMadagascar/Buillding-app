@@ -38,6 +38,10 @@ dependencies:
   image: ^4.0.17
   path_provider: ^2.0.14
   shared_preferences: ^2.1.1
+  # Firebase
+  firebase_core: ^4.6.0
+  firebase_auth: ^6.3.0
+  google_sign_in: ^6.1.0
   
   # Scanner & Printer
   pretty_qr_code: ^3.3.0
@@ -49,6 +53,7 @@ dependencies:
   url_launcher: ^6.1.11
   # removed flutter_gen - we are hardcoding French strings
   lottie: ^2.3.0
+  cloud_firestore: ^6.2.0
 
 dev_dependencies:
   flutter_test:
