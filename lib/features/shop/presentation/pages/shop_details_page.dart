@@ -14,6 +14,8 @@ import 'dart:io';
 import '../bloc/shop_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
+import '../../../../core/services/current_user_service.dart';
+import '../../../../core/services/current_shop_service.dart';
 
 class ShopDetailsPage extends StatefulWidget {
   const ShopDetailsPage({super.key});
@@ -241,12 +243,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.color
-                  ?.withValues(alpha: 0.6) ??
-              Colors.grey[500],
+          color:
+              Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
+                  Colors.grey[500],
           fontWeight: FontWeight.w500,
         ),
         border: const OutlineInputBorder(
@@ -287,6 +286,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
               return const Center(child: CircularProgressIndicator());
             }
 
+            // Determine current role and whether to show admin-only fields
+            final roleStr =
+                CurrentUserService.userData?['role'] as String? ?? 'vendeur';
+            final isAdminOrSolo = roleStr == 'admin' || roleStr == 'solo';
+            // Prefer shop code from the currently-loaded shopData (set by CurrentShopService)
+            final String? shopCode = CurrentShopService.shopData != null
+                ? (CurrentShopService.shopData!['shopCode'] as String?)
+                : null;
+
             final bottomPad = MediaQuery.of(context).viewInsets.bottom + 96;
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad),
@@ -301,7 +309,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                           color: const Color.fromARGB(255, 165, 96, 6)
-                              .withValues(alpha: 0.8),
+                              .withOpacity(0.8),
                         )),
                     const SizedBox(
                       height: 5,
@@ -442,6 +450,25 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                             Text(_emailController.text.isNotEmpty
                                 ? _emailController.text
                                 : ''),
+                            // Show the shop code to owners/admins only
+                            if (isAdminOrSolo) ...[
+                              const SizedBox(height: 8),
+                              const InputLabel(text: 'Code Boutique'),
+                              Card(
+                                elevation: 0,
+                                color: Theme.of(context).cardColor,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 14),
+                                  child: Text(
+                                    shopCode ?? 'N/A',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -509,10 +536,16 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               child: TextFormField(
                                 controller: _mvolaController,
                                 keyboardType: TextInputType.phone,
-                                decoration: const InputDecoration(
-                                  prefixIcon: Icon(Icons.phone_android),
+                                enabled: isAdminOrSolo,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.phone_android),
                                   labelText: 'Numéro MVola',
                                   hintText: '0383664786',
+                                  // indicate read-only if not editable
+                                  suffixIcon: isAdminOrSolo
+                                      ? null
+                                      : const Icon(Icons.lock_outline,
+                                          size: 18),
                                 ),
                                 validator: AppValidators.required('Requis'),
                               ),
@@ -523,10 +556,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               child: TextFormField(
                                 controller: _orangeController,
                                 keyboardType: TextInputType.phone,
-                                decoration: const InputDecoration(
-                                  prefixIcon: Icon(Icons.phone_android),
+                                enabled: isAdminOrSolo,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.phone_android),
                                   labelText: 'Numéro Orange Money',
                                   hintText: '0372177785',
+                                  suffixIcon: isAdminOrSolo
+                                      ? null
+                                      : const Icon(Icons.lock_outline,
+                                          size: 18),
                                 ),
                                 validator: AppValidators.required('Requis'),
                               ),
@@ -537,10 +575,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               child: TextFormField(
                                 controller: _airtelController,
                                 keyboardType: TextInputType.phone,
-                                decoration: const InputDecoration(
-                                  prefixIcon: Icon(Icons.phone_android),
+                                enabled: isAdminOrSolo,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.phone_android),
                                   labelText: 'Numéro Airtel Money',
                                   hintText: '0332177785',
+                                  suffixIcon: isAdminOrSolo
+                                      ? null
+                                      : const Icon(Icons.lock_outline,
+                                          size: 18),
                                 ),
                                 validator: AppValidators.required('Requis'),
                               ),

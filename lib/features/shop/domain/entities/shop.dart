@@ -12,7 +12,7 @@ class Shop extends Equatable {
   final String airtelMoneyNumber;
 
   const Shop({
-    this.name = 'Diary Fashion',
+    this.name = 'GRC POS',
     this.addressLine1 = '',
     this.email = '',
     this.phoneNumber = '',

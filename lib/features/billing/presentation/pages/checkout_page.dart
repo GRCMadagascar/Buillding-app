@@ -7,10 +7,13 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../../core/data/hive_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/sale_model.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/shop_helper.dart';
+import '../../../../core/services/current_shop_service.dart';
 import '../bloc/billing_bloc.dart';
 import 'dart:math' as math;
 // Removed localization dependency: texts are hardcoded in French.
@@ -34,8 +37,24 @@ class _CheckoutPageState extends State<CheckoutPage>
   late final TextEditingController _amountReceivedController;
   double _amountReceived = 0.0;
   double _change = 0.0;
+  Map<String, dynamic>? _remoteShopData;
+  String? _remoteShopId;
 
   String _operatorPhone(ShopState shopState) {
+    // Prefer the remote Firestore shop phone if available (multi-shop support)
+    if (_remoteShopData != null) {
+      switch (_selectedOperator) {
+        case Operator.mvola:
+          return (_remoteShopData!['mvolaNumber'] as String?) ?? '';
+        case Operator.orange:
+          return (_remoteShopData!['orangeMoneyNumber'] as String?) ?? '';
+        case Operator.airtel:
+          return (_remoteShopData!['airtelMoneyNumber'] as String?) ?? '';
+        default:
+          return '';
+      }
+    }
+
     if (shopState is ShopLoaded) {
       switch (_selectedOperator) {
         case Operator.mvola:
@@ -134,11 +153,26 @@ class _CheckoutPageState extends State<CheckoutPage>
   @override
   void initState() {
     super.initState();
+    _loadRemoteShop();
     _floatController =
         AnimationController(vsync: this, duration: const Duration(seconds: 3))
           ..repeat();
     _amountReceivedController = TextEditingController(text: '');
     _amountReceivedController.addListener(_updateChange);
+  }
+
+  Future<void> _loadRemoteShop() async {
+    try {
+      final shop = await ShopHelper.fetchCurrentUserShop();
+      if (shop != null && mounted) {
+        setState(() {
+          _remoteShopId = shop['id'] as String?;
+          _remoteShopData = Map<String, dynamic>.from(shop['data'] as Map);
+        });
+      }
+    } catch (_) {
+      // ignore errors silently; remote shop is optional
+    }
   }
 
   @override
@@ -210,7 +244,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                       boxShadow: selected
                           ? [
                               BoxShadow(
-                                color: _operatorColor().withValues(alpha: 0.2),
+                                color: _operatorColor().withOpacity(0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               )
@@ -249,7 +283,7 @@ class _CheckoutPageState extends State<CheckoutPage>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor =
-        isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE5E5EA);
+        isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFE5E5EA);
 
     return PopScope(
         // allow normal back navigation; do NOT clear the cart when returning
@@ -316,6 +350,26 @@ class _CheckoutPageState extends State<CheckoutPage>
                   );
 
                   HiveDatabase.addSaleMap(sale.toMap());
+                  try {
+                    // Also persist the sale to Firestore under `sales` collection
+                    final saleDoc = {
+                      'date': Timestamp.fromDate(sale.date),
+                      'totalAmount': sale.total,
+                      'itemsList': sale.items
+                          .map((i) => {
+                                'name': i.name,
+                                'price': i.price,
+                                'quantity': i.quantity
+                              })
+                          .toList(),
+                      'paymentMethod': sale.paymentMethod,
+                      'amountReceived': sale.amountReceived,
+                      'change': sale.change,
+                      'uid': sale.uid,
+                      'shopId': _remoteShopId ?? '',
+                    };
+                    FirebaseFirestore.instance.collection('sales').add(saleDoc);
+                  } catch (_) {}
                 } catch (_) {}
                 // Show a modern success sheet with a small bounce animation.
                 showModalBottomSheet(
@@ -439,8 +493,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                   border: Border.all(color: borderColor),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withOpacity(0.05),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     )
@@ -509,16 +562,14 @@ class _CheckoutPageState extends State<CheckoutPage>
                     Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Theme.of(context)
-                                .cardColor
-                                .withValues(alpha: 0.95)
-                            : Colors.white.withValues(alpha: 0.9),
+                            ? Theme.of(context).cardColor.withOpacity(0.95)
+                            : Colors.white.withOpacity(0.9),
                         borderRadius: const BorderRadius.horizontal(
                             left: Radius.circular(24),
                             right: Radius.circular(24)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
+                            color: Colors.black.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, -4),
                           ),
@@ -594,7 +645,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                 if (isDark)
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(alpha: 0.6),
+                                                        .withOpacity(0.6),
                                                     blurRadius: 12,
                                                     offset: const Offset(0, 6),
                                                   )
@@ -622,7 +673,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                       ),
                                                     ),
                                                   ),
-                                                  // overlay shop (Diary Fashion) logo at center if available
+                                                  // overlay shop logo at center if available (uses CurrentShopService first)
                                                   Builder(builder: (ctx) {
                                                     final settings =
                                                         HiveDatabase
@@ -630,6 +681,45 @@ class _CheckoutPageState extends State<CheckoutPage>
                                                     final logoPath = settings
                                                             .get('shop_logo')
                                                         as String?;
+                                                    final currentLogoUrl =
+                                                        CurrentShopService
+                                                            .logoUrl;
+                                                    // prefer a remote logo URL if available
+                                                    if (currentLogoUrl !=
+                                                            null &&
+                                                        currentLogoUrl
+                                                            .isNotEmpty) {
+                                                      try {
+                                                        return Container(
+                                                          width: 64,
+                                                          height: 64,
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(6),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: isDark
+                                                                ? Colors.black
+                                                                : Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
+                                                          ),
+                                                          child: Image.network(
+                                                              currentLogoUrl,
+                                                              fit: BoxFit
+                                                                  .contain,
+                                                              errorBuilder: (_,
+                                                                      __,
+                                                                      ___) =>
+                                                                  const SizedBox
+                                                                      .shrink()),
+                                                        );
+                                                      } catch (_) {}
+                                                    }
+                                                    // otherwise fall back to local setting
+
                                                     if (logoPath != null &&
                                                         logoPath.isNotEmpty) {
                                                       final f = File(logoPath);

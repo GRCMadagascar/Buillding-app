@@ -13,6 +13,10 @@ import '../../features/billing/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard.dart';
+import '../../core/widgets/no_access_page.dart';
+import '../../core/services/current_user_service.dart';
+import '../../core/models/user_role.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -57,11 +61,23 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/products',
-      builder: (context, state) => const ProductListPage(),
+      builder: (context, state) {
+        // Both admins and vendeurs can access product list
+        final role = CurrentUserService.role;
+        if (role == null) return const NoAccessPage();
+        return const ProductListPage();
+      },
       routes: [
         GoRoute(
           path: 'add',
-          builder: (context, state) => const AddProductPage(),
+          builder: (context, state) {
+            final role = CurrentUserService.role;
+            if (role == UserRole.vendeur) {
+              return const NoAccessPage(
+                  message: 'Ajout de produit réservé aux administrateurs');
+            }
+            return const AddProductPage();
+          },
         ),
         GoRoute(
           path: 'edit/:id',
@@ -79,6 +95,10 @@ final router = GoRouter(
     GoRoute(
       path: '/shop',
       builder: (context, state) => const ShopDetailsPage(),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardPage(),
     ),
   ],
 );

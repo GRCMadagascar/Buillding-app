@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/current_shop_service.dart';
 
 import '../../../billing/presentation/bloc/billing_bloc.dart';
 import 'package:billing_app/features/product/presentation/bloc/product_bloc.dart';
@@ -12,6 +14,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../../../core/locale/language_cubit.dart';
+import '../../../../core/services/current_user_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,6 +39,317 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _scannerController.dispose();
     super.dispose();
+  }
+
+  Widget _buildAdminDashboard(BuildContext context) {
+    // Horizontal date selector for last 14 days
+    final today = DateTime.now();
+    final dates =
+        List.generate(15, (i) => today.subtract(Duration(days: 7 - i)));
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Admin Dashboard',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor)),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 86,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: dates.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, idx) {
+                  final d = dates[idx];
+                  final label =
+                      idx == 7 ? 'Aujourd\'hui' : '${d.day}/${d.month}';
+                  return GestureDetector(
+                    onTap: () => _showAnalyticsForDate(context, d),
+                    child: Container(
+                      width: 110,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppTheme.primaryColor.withOpacity(0.12)),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(label,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 6),
+                          Text(
+                            _dayName(d),
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[500]),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Small analytics overview cards
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: [
+                  _analyticsOverviewCard(
+                      Icons.attach_money, 'Revenu total', '—'),
+                  _analyticsOverviewCard(
+                      Icons.shopping_cart, 'Articles vendus', '—'),
+                  _analyticsOverviewCard(Icons.star, 'Meilleure vente', '—'),
+                  _analyticsOverviewCard(Icons.warning, 'Alertes stock', '—'),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _dayName(DateTime d) {
+    const names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    return names[d.weekday - 1];
+  }
+
+  Widget _analyticsOverviewCard(IconData icon, String title, String value) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppTheme.primaryColor),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            const Spacer(),
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAnalyticsForDate(
+      BuildContext context, DateTime date) async {
+    // Compute start and end of the selected date (local)
+    final start = DateTime(date.year, date.month, date.day);
+    final end = start.add(const Duration(days: 1));
+
+    // Guard: current shop id
+    final shopId = CurrentShopService.shopId ?? '';
+    if (shopId.isEmpty) {
+      showModalBottomSheet(
+          context: context,
+          builder: (_) => Container(
+                padding: const EdgeInsets.all(16),
+                child: const Text('Aucun magasin chargé.'),
+              ));
+      return;
+    }
+
+    // Fetch sales for the day
+    final salesSnap = await FirebaseFirestore.instance
+        .collection('sales')
+        .where('shopId', isEqualTo: shopId)
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('createdAt', isLessThan: Timestamp.fromDate(end))
+        .get();
+
+    double totalRevenue = 0;
+    int totalItems = 0;
+    final Map<String, int> productCounts = {};
+
+    for (final doc in salesSnap.docs) {
+      final data = doc.data();
+      final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+      totalRevenue += amount;
+
+      final items = data['items'] as List<dynamic>? ?? [];
+      for (final it in items) {
+        final pid = it['productId'] as String? ?? '';
+        final qty = (it['quantity'] as num?)?.toInt() ?? 0;
+        totalItems += qty;
+        productCounts[pid] = (productCounts[pid] ?? 0) + qty;
+      }
+    }
+
+    // Top seller id
+    String topSellerId = '';
+    int topCount = 0;
+    productCounts.forEach((k, v) {
+      if (v > topCount) {
+        topCount = v;
+        topSellerId = k;
+      }
+    });
+
+    String topSellerName = '—';
+    if (topSellerId.isNotEmpty) {
+      final pDoc = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(topSellerId)
+          .get();
+      if (pDoc.exists)
+        topSellerName = (pDoc.data() ?? {})['name'] as String? ?? '—';
+    }
+
+    // Stock alerts (low / overstock / dead stock) - simple rules
+    final productsSnap = await FirebaseFirestore.instance
+        .collection('products')
+        .where('shopId', isEqualTo: shopId)
+        .get();
+
+    final lowStock = <String>[];
+    final overStock = <String>[];
+    final deadStock = <String>[];
+
+    for (final p in productsSnap.docs) {
+      final pdata = p.data();
+      final name = pdata['name'] as String? ?? 'Produit';
+      final qty = (pdata['quantity'] as num?)?.toInt() ?? 0;
+      if (qty <= 5) lowStock.add(name);
+      if (qty >= 100) overStock.add(name);
+      // dead stock: product had zero sales for this shop across all sales
+      final soldCountQuery = await FirebaseFirestore.instance
+          .collection('sales')
+          .where('shopId', isEqualTo: shopId)
+          .where('items', arrayContains: {'productId': p.id})
+          .limit(1)
+          .get();
+      if (soldCountQuery.docs.isEmpty) deadStock.add(name);
+    }
+
+    // Show bottom sheet with the analytics
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.92,
+          builder: (context, controller) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                controller: controller,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 48,
+                        height: 6,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                        'Analytics — ${start.day}/${start.month}/${start.year}',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text('Total Revenue',
+                                style: TextStyle(
+                                    color: Colors.green[700],
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 6),
+                            Text('${totalRevenue.toStringAsFixed(0)} MGA',
+                                style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green)),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Total Items'),
+                                      const SizedBox(height: 6),
+                                      Text('$totalItems',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ]),
+                                Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Top Seller'),
+                                      const SizedBox(height: 6),
+                                      Text(topSellerName,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ])
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(),
+                            const SizedBox(height: 12),
+                            const Text('Stock Notes',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            if (lowStock.isNotEmpty)
+                              Text('Low stock: ${lowStock.join(', ')}'),
+                            if (overStock.isNotEmpty)
+                              Text('Overstock: ${overStock.join(', ')}'),
+                            if (deadStock.isNotEmpty)
+                              Text('Dead stock: ${deadStock.join(', ')}'),
+                            if (lowStock.isEmpty &&
+                                overStock.isEmpty &&
+                                deadStock.isEmpty)
+                              const Text('No alerts for this date.'),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _onDetect(BarcodeCapture capture) async {
@@ -152,7 +466,7 @@ class _HomePageState extends State<HomePage> {
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF6C63FF).withValues(alpha: 0.1)
+                                ? const Color(0xFF6C63FF).withOpacity(0.1)
                                 : Colors.transparent,
                             border: Border.all(
                               color: isSelected
@@ -208,57 +522,149 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LanguageCubit, LanguageState>(builder: (context, lang) {
-      return Scaffold(
-        body: BlocListener<BillingBloc, BillingState>(
-          listenWhen: (previous, current) =>
-              previous.error != current.error && current.error != null,
-          listener: (context, state) {
-            if (state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error!),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          },
-          child: Stack(
-            children: [
-              // SCANNER VIEW (TOP 50%)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: MediaQuery.of(context).size.height * 0.4,
-                child: _buildScannerSection(),
-              ),
+      final roleStr = CurrentUserService.userData?['role'] as String? ?? '';
+      final isStaff = roleStr == 'vendeur';
+      final isAdmin = roleStr == 'admin';
+      final isSolo = roleStr == 'solo';
+      final showSales = isStaff || isSolo;
 
-              // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
-              Positioned(
-                top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomPanel(),
-              ),
-            ],
-          ),
-        ),
-        bottomSheet:
-            BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
-          return PrimaryButton(
-            onPressed: state.cartItems.isEmpty
-                ? null
-                : () async {
-                    _scannerController.stop();
-                    await context.push('/checkout');
-                    if (_isCameraOn && mounted) _scannerController.start();
-                  },
-            icon: Icons.payment,
-            label: 'Vérifier la commande',
-          );
-        }),
+      // Admin view flag
+      final showAdminDashboard = isAdmin;
+
+      return Scaffold(
+        drawer: (isAdmin || isSolo)
+            ? Drawer(
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      DrawerHeader(
+                        decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withOpacity(0.08)),
+                        child: Center(
+                            child: Text('GRC POS',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold))),
+                      ),
+                      // Admin / Solo: Admin Dashboard + Settings
+                      if (isAdmin || isSolo) ...[
+                        ListTile(
+                          leading: const Icon(Icons.dashboard),
+                          title: const Text('Admin Dashboard'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push('/admin');
+                          },
+                        ),
+                        const Divider(),
+                        ListTile(
+                          leading: const Icon(Icons.settings),
+                          title: const Text('Paramètres'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push('/settings');
+                          },
+                        ),
+                      ] else if (isStaff) ...[
+                        // Staff: show Sales-related quick link
+                        ListTile(
+                          leading: const Icon(Icons.point_of_sale),
+                          title: const Text('Mode Vente'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push('/');
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+            : null,
+        body: showAdminDashboard
+            ? _buildAdminDashboard(context)
+            : showSales
+                ? BlocListener<BillingBloc, BillingState>(
+                    listenWhen: (previous, current) =>
+                        previous.error != current.error &&
+                        current.error != null,
+                    listener: (context, state) {
+                      if (state.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.error!),
+                            backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        // SCANNER VIEW (TOP 50%)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: MediaQuery.of(context).size.height * 0.4,
+                          child: _buildScannerSection(),
+                        ),
+
+                        // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
+                        Positioned(
+                          top: (MediaQuery.of(context).size.height * 0.4) -
+                              24, // overlap
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _buildBottomPanel(),
+                        ),
+                      ],
+                    ),
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.store, size: 72, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Mode Vente non disponible pour ce rôle',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () async {
+                              await context.push('/settings');
+                            },
+                            child: const Text('Paramètres'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+        bottomSheet: showSales
+            ? BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
+                return PrimaryButton(
+                  onPressed: state.cartItems.isEmpty
+                      ? null
+                      : () async {
+                          _scannerController.stop();
+                          await context.push('/checkout');
+                          if (_isCameraOn && mounted)
+                            _scannerController.start();
+                        },
+                  icon: Icons.payment,
+                  label: 'Vérifier la commande',
+                );
+              })
+            : null,
       );
     });
   }
@@ -475,7 +881,7 @@ class _HomePageState extends State<HomePage> {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.3),
+              color: Colors.grey.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -641,7 +1047,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(4),

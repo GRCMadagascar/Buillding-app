@@ -10,6 +10,8 @@ import 'email_verification_page.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/widgets/gold_gradient_button.dart';
 import 'signup_page.dart';
+import '../../../../core/services/current_user_service.dart';
+import '../../../../core/services/current_shop_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -90,6 +92,12 @@ class _LoginPageState extends State<LoginPage>
       // Persist remember flag
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('remember_me', _remember);
+
+      // Load current user role and shop into memory for RBAC and branding
+      try {
+        await CurrentUserService.loadForUid(user.uid);
+        await CurrentShopService.loadForOwner(user.uid);
+      } catch (_) {}
 
       if (!mounted) return;
       context.go('/');
@@ -233,9 +241,9 @@ class _LoginPageState extends State<LoginPage>
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: Colors.white.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: gold1.withValues(alpha: 0.18)),
+                      border: Border.all(color: gold1.withOpacity(0.18)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -260,7 +268,7 @@ class _LoginPageState extends State<LoginPage>
                                       FloatingLabelBehavior.auto,
                                   enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                          color: gold1.withValues(alpha: 0.6)),
+                                          color: gold1.withOpacity(0.6)),
                                       borderRadius: BorderRadius.circular(12)),
                                   focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(color: gold2),
@@ -283,7 +291,7 @@ class _LoginPageState extends State<LoginPage>
                                       FloatingLabelBehavior.auto,
                                   enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
-                                          color: gold1.withValues(alpha: 0.6)),
+                                          color: gold1.withOpacity(0.6)),
                                       borderRadius: BorderRadius.circular(12)),
                                   focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(color: gold2),
@@ -357,12 +365,11 @@ class _LoginPageState extends State<LoginPage>
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 10, horizontal: 12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.95),
+                                    color: Colors.white.withOpacity(0.95),
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.2),
+                                          color: Colors.black.withOpacity(0.2),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2))
                                     ],
@@ -379,7 +386,8 @@ class _LoginPageState extends State<LoginPage>
                                       const SizedBox(width: 12),
                                       const Text('Continuer avec Google',
                                           style: TextStyle(
-                                              color: Colors.black,
+                                              color: Color.fromARGB(
+                                                  255, 32, 32, 32),
                                               fontWeight: FontWeight.bold)),
                                     ],
                                   ),

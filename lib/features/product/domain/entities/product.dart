@@ -7,6 +7,8 @@ class Product extends Equatable {
   final String barcode;
   final double price;
   final int stock; // Optional implementation detail
+  final String? imageUrl;
+  final String shopId;
 
   const Product({
     required this.id,
@@ -14,8 +16,11 @@ class Product extends Equatable {
     required this.barcode,
     required this.price,
     this.stock = 0,
+    this.imageUrl,
+    this.shopId = '',
   });
 
   @override
-  List<Object?> get props => [id, name, barcode, price, stock];
+  List<Object?> get props =>
+      [id, name, barcode, price, stock, imageUrl, shopId];
 }

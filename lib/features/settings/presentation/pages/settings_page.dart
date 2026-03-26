@@ -8,6 +8,7 @@ import 'package:app_settings/app_settings.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/services/current_shop_service.dart';
 // Language cubit removed; app is hardcoded to French.
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
@@ -88,7 +89,7 @@ class _SettingsPageState extends State<SettingsPage>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
+                          color: Colors.black.withOpacity(0.12),
                           blurRadius: 8,
                           offset: const Offset(0, 6),
                         )
@@ -101,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage>
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: Colors.white.withOpacity(0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.emoji_events,
@@ -142,9 +143,9 @@ class _SettingsPageState extends State<SettingsPage>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                               colors: [
-                                Colors.white.withValues(alpha: 0.0),
-                                Colors.white.withValues(alpha: 0.75),
-                                Colors.white.withValues(alpha: 0.0),
+                                Colors.white.withOpacity(0.0),
+                                Colors.white.withOpacity(0.75),
+                                Colors.white.withOpacity(0.0),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter),
@@ -195,7 +196,7 @@ class _SettingsPageState extends State<SettingsPage>
                               color: const Color(0xFFD4AF37),
                               shadows: [
                                 BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.6),
+                                    color: Colors.black.withOpacity(0.6),
                                     offset: const Offset(2, 2),
                                     blurRadius: 6),
                                 const BoxShadow(
@@ -379,11 +380,11 @@ class _SettingsPageState extends State<SettingsPage>
                               width: 34,
                               height: 34,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: Colors.white.withOpacity(0.8),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.08),
+                                    color: Colors.black.withOpacity(0.08),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -412,7 +413,8 @@ class _SettingsPageState extends State<SettingsPage>
                             top: 86,
                             child: BlocBuilder<ShopBloc, ShopState>(
                               builder: (context, state) {
-                                String shopName = 'Diary Fashion';
+                                String shopName =
+                                    CurrentShopService.currentShopName;
                                 if (state is ShopLoaded &&
                                     state.shop.name.isNotEmpty) {
                                   shopName = state.shop.name;
@@ -439,8 +441,7 @@ class _SettingsPageState extends State<SettingsPage>
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.03),
+                                                        .withOpacity(0.03),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 4),
                                                   ),
@@ -469,8 +470,7 @@ class _SettingsPageState extends State<SettingsPage>
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.08),
+                                                        .withOpacity(0.08),
                                                     blurRadius: 12,
                                                     offset: const Offset(0, 6),
                                                   ),
@@ -512,13 +512,12 @@ class _SettingsPageState extends State<SettingsPage>
                                               height: 34,
                                               decoration: BoxDecoration(
                                                 color: Colors.white
-                                                    .withValues(alpha: 0.8),
+                                                    .withOpacity(0.8),
                                                 shape: BoxShape.circle,
                                                 boxShadow: [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.08),
+                                                        .withOpacity(0.08),
                                                     blurRadius: 6,
                                                     offset: const Offset(0, 2),
                                                   ),
@@ -561,7 +560,7 @@ class _SettingsPageState extends State<SettingsPage>
                                         boxShadow: [
                                           BoxShadow(
                                             color: AppTheme.primaryColor
-                                                .withValues(alpha: 0.12),
+                                                .withOpacity(0.12),
                                             blurRadius: 12,
                                             offset: const Offset(0, 6),
                                           )
@@ -830,7 +829,7 @@ class _SettingsPageState extends State<SettingsPage>
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            color: AppTheme.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppTheme.primaryColor, size: 20),

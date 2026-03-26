@@ -9,6 +9,7 @@ import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
+import 'core/widgets/subscription_guard.dart';
 import 'core/utils/snackbar_helper.dart';
 import 'core/locale/language_cubit.dart';
 // Localization removed: hardcoded French strings used across the app.
@@ -73,44 +74,46 @@ class MyApp extends StatelessWidget {
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, mode) {
-          return MaterialApp.router(
-            // App is hardcoded to French. Remove localization delegates.
-            locale: const Locale('fr'),
-            title: 'GRC POS SYSTEM',
-            // Keep the base themes from AppTheme but inject our global SnackBar style
-            theme: AppTheme.lightTheme.copyWith(
-              snackBarTheme: const SnackBarThemeData(
-                behavior: SnackBarBehavior.floating,
-                shape: StadiumBorder(),
-                backgroundColor: Color(0xFFD32F2F), // default error red
-                elevation: 6.0,
-                contentTextStyle: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15.0,
+          return SubscriptionGuard(
+            child: MaterialApp.router(
+              // App is hardcoded to French. Remove localization delegates.
+              locale: const Locale('fr'),
+              title: 'GRC POS SYSTEM',
+              // Keep the base themes from AppTheme but inject our global SnackBar style
+              theme: AppTheme.lightTheme.copyWith(
+                snackBarTheme: const SnackBarThemeData(
+                  behavior: SnackBarBehavior.floating,
+                  shape: StadiumBorder(),
+                  backgroundColor: Color(0xFFD32F2F), // default error red
+                  elevation: 6.0,
+                  contentTextStyle: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.0,
+                  ),
                 ),
               ),
-            ),
-            darkTheme: AppTheme.darkTheme.copyWith(
-              snackBarTheme: const SnackBarThemeData(
-                behavior: SnackBarBehavior.floating,
-                shape: StadiumBorder(),
-                backgroundColor: Color(0xFFD32F2F),
-                elevation: 6.0,
-                contentTextStyle: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15.0,
+              darkTheme: AppTheme.darkTheme.copyWith(
+                snackBarTheme: const SnackBarThemeData(
+                  behavior: SnackBarBehavior.floating,
+                  shape: StadiumBorder(),
+                  backgroundColor: Color(0xFFD32F2F),
+                  elevation: 6.0,
+                  contentTextStyle: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.0,
+                  ),
                 ),
               ),
+              // Use the ThemeCubit-controlled mode so the UI can toggle
+              // between Dark and Light. ThemeCubit defaults to Dark now.
+              themeMode: mode,
+              // Use global scaffold messenger key so the helper can show snackbars
+              scaffoldMessengerKey: scaffoldMessengerKey,
+              routerConfig: router,
+              debugShowCheckedModeBanner: false,
             ),
-            // Use the ThemeCubit-controlled mode so the UI can toggle
-            // between Dark and Light. ThemeCubit defaults to Dark now.
-            themeMode: mode,
-            // Use global scaffold messenger key so the helper can show snackbars
-            scaffoldMessengerKey: scaffoldMessengerKey,
-            routerConfig: router,
-            debugShowCheckedModeBanner: false,
           );
         },
       ),

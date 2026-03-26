@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/current_user_service.dart';
 import '../../../../core/utils/app_validators.dart';
 import 'package:flutter/services.dart';
 // Localization removed — using hardcoded French strings.
@@ -42,6 +43,7 @@ class _EditProductPageState extends State<EditProductPage> {
         name: _name,
         barcode: _barcode,
         price: _price,
+        imageUrl: widget.product.imageUrl,
       );
 
       context.read<ProductBloc>().add(UpdateProduct(updatedProduct));
@@ -51,6 +53,9 @@ class _EditProductPageState extends State<EditProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final roleStr = CurrentUserService.userData?['role'] as String? ?? 'vendeur';
+    final isStaff = roleStr == 'vendeur';
+
     return Scaffold(
         appBar: AppBar(
           elevation: 0,
@@ -66,47 +71,48 @@ class _EditProductPageState extends State<EditProductPage> {
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Barcode display with edit action
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    margin: const EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Hero(
-                          tag: widget.product.id,
-                          child: CircleAvatar(
-                            backgroundColor:
-                                AppTheme.primaryColor.withValues(alpha: 0.1),
-                            child: Text(widget.product.name.isNotEmpty
-                                ? widget.product.name[0].toUpperCase()
-                                : '?'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Nom du produit',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor
-                                          .withValues(alpha: 0.7))),
-                              const SizedBox(height: 4),
-                              Text(_barcode,
+                          child: Text(_barcode,
                                   style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'monospace')),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          color: AppTheme.primaryColor,
+                          onPressed: isStaff
+                              ? null
+                              : () async {
+                                  final newVal = await showDialog<String>(
+                                    context: context,
+                                    builder: (ctx) {
+                                      String edited = widget.product.barcode;
+                                      return AlertDialog(
+                                        title: const Text('Modifier le code-barres'),
+                                        content: TextFormField(
+                                          initialValue: edited,
+                                          keyboardType: TextInputType.text,
+                                          onChanged: (v) => edited = v,
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text('Annuler')),
+                                          ElevatedButton(
+                                              onPressed: () => Navigator.pop(ctx, edited),
+                                              child: const Text('Enregistrer')),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  if (newVal != null && newVal.trim().isNotEmpty) {
+                                    setState(() {
+                                      // Update local barcode variable; submit will persist
+                                      _barcode = newVal.trim();
+                                    });
+                                  }
+                                },
+                        ),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       fontFamily: 'monospace')),
@@ -156,6 +162,7 @@ class _EditProductPageState extends State<EditProductPage> {
 
                   TextFormField(
                     initialValue: _name,
+                    readOnly: isStaff,
                     textCapitalization: TextCapitalization.words,
                     validator: AppValidators.required('Veuillez saisir le nom'),
                     onSaved: (value) => _name = value!,
@@ -166,10 +173,10 @@ class _EditProductPageState extends State<EditProductPage> {
 
                   // Price row: value on left, fixed currency unit on far right
                   Row(
-                    children: [
                       Expanded(
                         child: TextFormField(
                           initialValue: _price.toStringAsFixed(0),
+                          readOnly: isStaff,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: false),
                           inputFormatters: [
@@ -184,16 +191,17 @@ class _EditProductPageState extends State<EditProductPage> {
                           onSaved: (value) => _price = double.parse(value!),
                         ),
                       ),
+                      ),
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text('TOTAL EN ARIARY',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+        bottomNavigationBar: PrimaryButton(
+          onPressed: isStaff ? null : _submit,
+          icon: Icons.save,
+          label: isStaff ? 'Lecture seule' : 'Enregistrer les modifications',
+        ));
                       ),
                     ],
                   ),
