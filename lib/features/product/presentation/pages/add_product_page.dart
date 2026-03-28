@@ -8,7 +8,6 @@ import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/product_firestore_service.dart';
 import '../../../../core/services/current_shop_service.dart';
@@ -355,8 +354,4 @@ class _AddProductPageState extends State<AddProductPage> {
           label: 'Ajouter',
         ));
   }
-}
-
-class FirebaseStorage {
-  static get instance => null;
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/routes/app_routes.dart';
@@ -21,30 +22,77 @@ import 'features/settings/presentation/bloc/printer_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize Firebase before other services so auth is available app-wide.
-  try {
-    // Prefer passing the generated options for the current platform so
-    // Firebase initializes with the correct project configuration.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e, st) {
-    // If initialization fails (missing firebase_options.dart, bad config,
-    // or platform misconfiguration), log the error and continue so the
-    // rest of the app can start and handle auth-related errors gracefully.
-    // The developer should check the Firebase setup locally.
+
+  // Capture uncaught Flutter framework errors and Zone errors so we can
+  // log them — this helps diagnose white-screen issues that only appear
+  // in release builds (Codemagic). These print statements will appear in
+  // CI logs or device logs.
+  FlutterError.onError = (details) {
     // ignore: avoid_print
-    print('Firebase initialization error: $e');
+    print('FlutterError: ${details.exceptionAsString()}');
     // ignore: avoid_print
-    print(st);
+    print(details.stack);
+  };
+
+  await runZonedGuarded(() async {
+    // Initialize Firebase before other services so auth is available app-wide.
+    // NOTE: Firebase initialization is skipped when using mock data to allow
+    // running the app without Firebase billing/configuration in CI or local
+    // environments. Toggle the flag in `lib/core/config/mock_config.dart`.
     try {
-      // Fallback to a default initialize in case options are not available.
-      await Firebase.initializeApp();
-    } catch (_) {}
-  }
-  await HiveDatabase.init();
-  await di.init();
-  runApp(const MyApp());
+      // Import the mock flag lazily to avoid import cycles during tests.
+      // If mock mode is enabled we skip Firebase initialization.
+      const bool useMock =
+          bool.fromEnvironment('USE_MOCK_FIRESTORE', defaultValue: true);
+      if (!useMock) {
+        // Prefer passing the generated options for the current platform so
+        // Firebase initializes with the correct project configuration.
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        // ignore: avoid_print
+        print('Firebase initialized with generated options');
+      } else {
+        // ignore: avoid_print
+        print('Running in MOCK mode: Firebase initialization skipped');
+      }
+    } catch (e, st) {
+      // If initialization fails, log and attempt fallback.
+      // ignore: avoid_print
+      print('Firebase initialization error: $e');
+      // ignore: avoid_print
+      print(st);
+      try {
+        await Firebase.initializeApp();
+        // ignore: avoid_print
+        print('Firebase initialized with default options');
+      } catch (e2, st2) {
+        // ignore: avoid_print
+        print('Firebase fallback init failed: $e2');
+        // ignore: avoid_print
+        print(st2);
+      }
+    }
+
+    // Initialize local DB and service locator
+    try {
+      await HiveDatabase.init();
+      await di.init();
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('Initialization error (Hive/DI): $e');
+      // ignore: avoid_print
+      print(st);
+    }
+
+    runApp(const MyApp());
+  }, (error, stack) {
+    // Log any uncaught asynchronous error
+    // ignore: avoid_print
+    print('Unhandled zone error: $error');
+    // ignore: avoid_print
+    print(stack);
+  });
 }
 
 class MyApp extends StatelessWidget {

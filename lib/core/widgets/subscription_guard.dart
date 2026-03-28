@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/current_shop_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A widget that verifies the current shop's subscription and either
 /// shows the child (app content) or an 'Abonnement Expiré' screen.
